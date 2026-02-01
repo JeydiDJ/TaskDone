@@ -1,0 +1,75 @@
+<footer class="bg-gradient-to-r from-indigo-50 to-purple-50 text-gray-800 py-12 mt-auto border-t border-gray-200">
+    <div class="container mx-auto px-4">
+        <div class="flex flex-col md:flex-row justify-between gap-8">
+            <!-- App Info -->
+            <div class="mb-6 md:mb-0 md:w-1/3">
+                <div class="flex items-center mb-4">
+                    <div class="p-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 mr-3">
+                        <i class="fas fa-tasks text-white text-xl"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800">TaskDone</h2>
+                </div>
+                <p class="text-gray-600 leading-relaxed">
+                    Stay organized, boost productivity, and achieve your goals with our modern task management platform.
+                </p>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="mb-6 md:mb-0">
+                <h3 class="text-lg font-bold mb-4 text-gray-800">Quick Links</h3>
+                <ul class="space-y-3">
+                    <li><a routerLink="/" class="text-gray-600 hover:text-indigo-600 transition-colors duration-200 flex items-center">
+                        <i class="fas fa-home mr-2 text-sm"></i>Home
+                    </a></li>
+                    @if (!isLoggedIn()) {
+                        <li><a routerLink="/login" class="text-gray-600 hover:text-indigo-600 transition-colors duration-200 flex items-center">
+                            <i class="fas fa-sign-in-alt mr-2 text-sm"></i>Login
+                        </a></li>
+                        <li><a routerLink="/register" class="text-gray-600 hover:text-indigo-600 transition-colors duration-200 flex items-center">
+                            <i class="fas fa-user-plus mr-2 text-sm"></i>Register
+                        </a></li>
+                    } @else {
+                        <li><a routerLink="/tasks" class="text-gray-600 hover:text-indigo-600 transition-colors duration-200 flex items-center">
+                            <i class="fas fa-list-check mr-2 text-sm"></i>My Tasks
+                        </a></li>
+                        @if (isAdmin()) {
+                            <li><a routerLink="/users" class="text-gray-600 hover:text-indigo-600 transition-colors duration-200 flex items-center">
+                                <i class="fas fa-users mr-2 text-sm"></i>Users
+                            </a></li>
+                        }
+                    }
+                </ul>
+            </div>
+
+            <!-- Contact -->
+            <div>
+                <h3 class="text-lg font-bold mb-4 text-gray-800">Connect</h3>
+                <div class="flex space-x-4">
+                    <a href="#" target="_blank" rel="noopener" class="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-200 shadow-sm hover:shadow-md">
+                        <i class="fab fa-github text-lg"></i>
+                    </a>
+                    <a href="#" target="_blank" rel="noopener" class="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-gray-600 hover:text-blue-500 hover:bg-blue-50 transition-all duration-200 shadow-sm hover:shadow-md">
+                        <i class="fab fa-twitter text-lg"></i>
+                    </a>
+                    <a href="#" target="_blank" rel="noopener" class="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 shadow-sm hover:shadow-md">
+                        <i class="fab fa-linkedin text-lg"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Section -->
+        <div class="mt-8 pt-8 border-t border-gray-200">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-500 text-sm">
+                    © 2025 TaskDone. All rights reserved.
+                </p>
+                <div class="flex items-center space-x-4 mt-4 md:mt-0">
+                    <span class="text-gray-500 text-sm">Made with</span>
+                    <i class="fas fa-heart text-red-500"></i>
+                    <span class="text-gray-500 text-sm">by TaskDone Team</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
