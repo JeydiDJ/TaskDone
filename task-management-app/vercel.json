@@ -16,5 +16,8 @@
       "dest": "/index.html"
     }
   ],
-  "outputDirectory": "dist/task-management-app"
+  "outputDirectory": "dist/task-management-app",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
