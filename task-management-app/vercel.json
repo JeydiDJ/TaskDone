@@ -1,11 +1,6 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "src/main.ts",
-      "use": "@angular-devkit/build-angular:application"
-    }
-  ],
+
   "routes": [
     {
       "src": "/api/(.*)",
