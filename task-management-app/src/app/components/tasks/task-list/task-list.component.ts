@@ -12,6 +12,7 @@ import { AuthService } from '../../../services/auth.service';
 })
 export class TaskListComponent implements OnInit {
   // Change the name to be consistent (remove $ suffix)
+  allTasks = signal<Task[]>([]);
   completedTasks = signal<Task[]>([]);
   pendingTasks = signal<Task[]>([]);
   unfinishedTasks = signal<Task[]>([]);
@@ -57,6 +58,7 @@ export class TaskListComponent implements OnInit {
     this.loadPendingTasks(this.pendingCurrentPage(), this.pendingItemsPerPage());
     this.loadCompletedTasks(this.completedCurrentPage(), this.completedItemsPerPage());
     this.loadUnfinishedTasks(this.unfinishedCurrentPage(), this.unfinishedItemsPerPage());
+    this.loadAllTasks();
 
     // Check for reminder message from query params
     this.route.queryParams.subscribe(params => {
@@ -173,6 +175,20 @@ export class TaskListComponent implements OnInit {
         console.error('Error getting user tasks:', error);
         this.pendingError.set('Error getting user tasks');
         this.pendingLoading.set(false);
+      },
+    });
+  }
+
+  loadAllTasks() {
+    this.taskService.getUserTasks(1, 1000).subscribe({
+      next: (response) => {
+        if (response.status === 'success' && response.data) {
+          this.allTasks.set(response.data.tasks || []);
+          this.checkGentleReminder();
+        }
+      },
+      error: (error) => {
+        console.error('Error getting all tasks:', error);
       },
     });
   }
@@ -321,7 +337,7 @@ export class TaskListComponent implements OnInit {
           if ('Notification' in window && Notification.permission === 'granted') {
             new Notification('Task Reminder', {
               body: message,
-              icon: '/favicon.ico'
+              //icon: '/favicon.ico'
             });
           }
 
@@ -330,6 +346,39 @@ export class TaskListComponent implements OnInit {
         }
       }
     });
+  }
+
+  checkGentleReminder() {
+    const now = new Date();
+
+    // Group tasks by startDate
+    const startDateGroups: { [key: string]: Task[] } = {};
+
+    this.allTasks().forEach(task => {
+      if (task.startDate && task.createdAt && !task.completed && task.deadline && new Date(task.deadline) > now) {
+        const startDateKey = new Date(task.startDate).toDateString();
+        if (!startDateGroups[startDateKey]) {
+          startDateGroups[startDateKey] = [];
+        }
+        startDateGroups[startDateKey].push(task);
+      }
+    });
+
+    // Check each startDate group for multiples of 5 tasks
+    for (const [startDateKey, tasks] of Object.entries(startDateGroups)) {
+      const count = tasks.length;
+      const milestone = Math.floor(count / 5) * 5; // Get the current milestone (5, 10, 15, etc.)
+      const milestoneKey = `gentleReminderShown_${startDateKey}_${milestone}`;
+
+      // If we haven't shown the reminder for this milestone yet
+      if (milestone >= 5 && !localStorage.getItem(milestoneKey)) {
+        this.reminderMessage.set("You've added quite a few tasks today. Productivity matters, but so does your well-being. You may continue if you feel ready");
+        this.showReminder.set(true);
+        // Mark that reminder was shown for this milestone
+        localStorage.setItem(milestoneKey, 'true');
+        break; // Show only one reminder at a time
+      }
+    }
   }
 
   isSuperAdmin() {

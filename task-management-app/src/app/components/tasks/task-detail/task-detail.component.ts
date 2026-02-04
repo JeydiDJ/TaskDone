@@ -16,6 +16,45 @@ export class TaskDetailComponent implements OnInit {
   error = signal<string | null>(null);
   deleting = signal<boolean>(false);
 
+  getTaskStatus() {
+    const currentTask = this.task();
+    if (!currentTask) return 'In Progress';
+
+    if (currentTask.completed) {
+      return 'Completed';
+    }
+
+    if (currentTask.deadline) {
+      const deadline = new Date(currentTask.deadline);
+      const now = new Date();
+      if (deadline < now) {
+        return 'Overdue';
+      }
+    }
+
+    return 'In Progress';
+  }
+
+  getStatusClass() {
+    const status = this.getTaskStatus();
+    switch (status) {
+      case 'Completed':
+        return 'text-green-700';
+      default:
+        return 'text-blue-700';
+    }
+  }
+
+  getStatusIcon() {
+    const status = this.getTaskStatus();
+    switch (status) {
+      case 'Completed':
+        return 'fa-check-circle';
+      default:
+        return 'fa-clock';
+    }
+  }
+
   router = inject(Router);
   taskService = inject(TaskService);
   route = inject(ActivatedRoute);

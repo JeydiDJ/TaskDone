@@ -63,16 +63,10 @@
                         </div>
                         
                         <div>
-                            <span class="bg-white text-sm font-medium px-3 py-1 rounded-full" 
-                                  [ngClass]="{
-                                    'text-green-700': task()?.completed,
-                                    'text-blue-700': !task()?.completed
-                                  }">
-                                <i class="fas" [ngClass]="{
-                                    'fa-check-circle': task()?.completed,
-                                    'fa-clock': !task()?.completed
-                                }"></i>
-                                {{ task()?.completed ? 'Completed' : 'In Progress' }}
+                            <span class="bg-white text-sm font-medium px-3 py-1 rounded-full"
+                                  [ngClass]="getStatusClass()">
+                                <i class="fas" [ngClass]="getStatusIcon()"></i>
+                                {{ getTaskStatus() }}
                             </span>
                         </div>
                     </div>
@@ -132,6 +126,17 @@
                                     <p class="text-xs text-gray-500">{{ task()?.createdAt | date:'medium' }}</p>
                                 </div>
                             </li>
+                            @if(task()?.deadline) {
+                                <li class="flex gap-4">
+                                    <div class="bg-red-100 h-8 w-8 rounded-full flex items-center justify-center z-10">
+                                        <i class="fas fa-calendar-alt text-red-600"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-sm font-medium text-gray-900">Task Deadline</h4>
+                                        <p class="text-xs text-gray-500">{{ task()?.deadline | date:'medium' }}</p>
+                                    </div>
+                                </li>
+                            }
                             @if(task()?.completed) {
                                 <li class="flex gap-4">
                                     <div class="bg-green-100 h-8 w-8 rounded-full flex items-center justify-center z-10">

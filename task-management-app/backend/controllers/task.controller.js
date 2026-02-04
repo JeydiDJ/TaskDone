@@ -66,17 +66,20 @@ exports.getOngoingTasks = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
+    const now = new Date();
 
     const tasks = await Task.find({
       user: req.user._id,
-      completed: false
+      completed: false,
+      deadline: { $gte: now } // Only tasks that are not overdue
     })
       .skip(skip)
       .limit(limit);
 
     const totalTasks = await Task.countDocuments({
       user: req.user._id,
-      completed: false
+      completed: false,
+      deadline: { $gte: now } // Only tasks that are not overdue
     });
 
     successResponse(res, 200, "Ongoing tasks retrieved successfully", {
