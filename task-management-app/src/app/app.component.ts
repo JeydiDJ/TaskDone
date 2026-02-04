@@ -27,13 +27,13 @@ export class AppComponent implements OnInit {
       { name: 'description', content: 'An Angular task management app' },
       { charset: 'UTF-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { rel: 'icon', type: 'image/x-icon', href: 'favicon.ico' },
+      { rel: 'icon', type: 'image/x-icon', href: '' },
       {
         rel: 'canonical',
-        href: 'https://task-management-app-manthanank.vercel.app/',
+        href: 'https://https://task-done-g10-git-main-michael-usi-jrs-projects.vercel.app//',
       },
       { property: 'og:title', content: 'Task Management App' },
-      { name: 'author', content: 'Manthan Ankolekar' },
+      { name: 'author', content: 'Group10' },
       { name: 'keywords', content: 'angular, nodejs. express, mongodb' },
       { name: 'robots', content: 'index, follow' },
       {
@@ -43,11 +43,11 @@ export class AppComponent implements OnInit {
       },
       {
         property: 'og:image',
-        content: 'https://task-management-app-manthanank.vercel.app/image.jpg',
+        content: 'https://https://task-done-g10-git-main-michael-usi-jrs-projects.vercel.app/',
       },
       {
         property: 'og:url',
-        content: 'https://task-management-app-manthanank.vercel.app/',
+        content: 'https://https://task-done-g10-git-main-michael-usi-jrs-projects.vercel.app//',
       },
     ]);
   }
