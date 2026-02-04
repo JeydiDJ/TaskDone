@@ -8,6 +8,7 @@ const connectDB = require('./config/db.config');
 const swaggerUI = require('swagger-ui-express');
 const swaggerSpec = require('./swagger');
 const { scheduleTaskCleanup } = require('./utils/taskCleanup');
+const { startReminderScheduler } = require('./utils/reminderScheduler');
 
 // Initialize Express app
 const app = express();
@@ -42,6 +43,9 @@ const app = express();
 
     // Initialize scheduled task cleanup
     scheduleTaskCleanup();
+
+    // Start reminder scheduler
+    startReminderScheduler();
 
     // Start server
     const PORT = process.env.PORT || 3000;

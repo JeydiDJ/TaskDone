@@ -163,6 +163,35 @@ router.get("/completed", auth, taskController.getCompletedTasks);
 
 /**
  * @swagger
+ * /api/tasks/unfinished:
+ *  get:
+ *    tags:
+ *      - Tasks
+ *    summary: Get unfinished tasks
+ *    description: Retrieves all unfinished tasks (ongoing tasks past deadline)
+ *    security:
+ *      - bearerAuth: []
+ *    parameters:
+ *      - in: query
+ *        name: page
+ *        schema:
+ *          type: integer
+ *        description: Page number
+ *      - in: query
+ *        name: limit
+ *        schema:
+ *          type: integer
+ *        description: Number of items per page
+ *    responses:
+ *      200:
+ *        description: Tasks retrieved successfully
+ *      500:
+ *        description: Server error
+ */
+router.get("/unfinished", auth, taskController.getUnfinishedTasks);
+
+/**
+ * @swagger
  * /api/tasks/{id}:
  *  get:
  *    tags:
@@ -260,5 +289,30 @@ router.put("/:id", auth, taskController.updateTask);
  *        description: Server error
  */
 router.delete("/:id", auth, taskController.deleteTask);
+
+/**
+ * @swagger
+ * /api/tasks/test-reminders:
+ *  post:
+ *    tags:
+ *      - Tasks
+ *    summary: Test reminder notifications
+ *    description: Manually trigger reminder check for testing
+ *    security:
+ *      - bearerAuth: []
+ *    responses:
+ *      200:
+ *        description: Reminder check completed
+ *      500:
+ *        description: Server error
+ */
+router.post("/test-reminders", auth, async (req, res) => {
+  try {
+    await checkAndSendReminders();
+    res.status(200).json({ message: "Reminder check completed. Check console logs." });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 module.exports = router;

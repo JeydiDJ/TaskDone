@@ -5,7 +5,7 @@ const { successResponse, errorResponse } = require("../utils/response");
 // Create a new task
 exports.createTask = async (req, res) => {
   try {
-    const { title, description, deadline, priority } = req.body;
+    const { title, description, startDate, deadline, priority } = req.body;
     const userId = req.user._id; // Use the authenticated user
 
     // Validate required fields
@@ -21,6 +21,7 @@ exports.createTask = async (req, res) => {
     const newTask = new Task({
       title,
       description,
+      startDate: startDate ? new Date(startDate) : undefined,
       deadline: new Date(deadline),
       priority,
       user: userId
@@ -110,6 +111,40 @@ exports.getCompletedTasks = async (req, res) => {
     });
 
     successResponse(res, 200, "Completed tasks retrieved successfully", {
+      tasks,
+      totalTasks,
+      totalPages: Math.ceil(totalTasks / limit),
+      currentPage: page,
+    });
+  } catch (error) {
+    errorResponse(res, 500, error.message);
+  }
+};
+
+// Get unfinished tasks for the authenticated user (ongoing tasks past deadline)
+exports.getUnfinishedTasks = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const now = new Date();
+
+    const tasks = await Task.find({
+      user: req.user._id,
+      completed: false,
+      deadline: { $lt: now }
+    })
+      .sort({ deadline: 1 })  // Sort by earliest deadline first
+      .skip(skip)
+      .limit(limit);
+
+    const totalTasks = await Task.countDocuments({
+      user: req.user._id,
+      completed: false,
+      deadline: { $lt: now }
+    });
+
+    successResponse(res, 200, "Unfinished tasks retrieved successfully", {
       tasks,
       totalTasks,
       totalPages: Math.ceil(totalTasks / limit),
