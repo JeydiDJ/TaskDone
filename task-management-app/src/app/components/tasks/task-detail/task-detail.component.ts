@@ -35,11 +35,26 @@ export class TaskDetailComponent implements OnInit {
     return 'In Progress';
   }
 
+  isOverdue() {
+    const currentTask = this.task();
+    if (!currentTask || currentTask.completed) return false;
+
+    if (currentTask.deadline) {
+      const deadline = new Date(currentTask.deadline);
+      const now = new Date();
+      return deadline < now;
+    }
+
+    return false;
+  }
+
   getStatusClass() {
     const status = this.getTaskStatus();
     switch (status) {
       case 'Completed':
         return 'text-green-700';
+      case 'Overdue':
+        return 'text-red-700';
       default:
         return 'text-blue-700';
     }

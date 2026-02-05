@@ -35,10 +35,11 @@
     @else {
         <div class="bg-white rounded-xl shadow-md overflow-hidden">
             <!-- Task Header -->
-            <div class="bg-gradient-to-r" 
+            <div class="bg-gradient-to-r"
                  [ngClass]="{
                     'from-green-500 to-green-700': task()?.completed,
-                    'from-blue-500 to-blue-700': !task()?.completed
+                    'from-red-500 to-red-700': isOverdue(),
+                    'from-blue-500 to-blue-700': !task()?.completed && !isOverdue()
                  }">
                 <div class="p-6">
                     <div class="flex justify-between items-start">

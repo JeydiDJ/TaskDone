@@ -141,23 +141,36 @@ exports.updateUser = async (req, res) => {
 exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     // Check if the user exists
     const user = await User.findById(id);
-    
+
     if (!user) {
       return errorResponse(res, 404, "User not found");
     }
-    
+
     // Prevent admins from deleting themselves as a safety measure
     if (id === req.user._id.toString()) {
       return errorResponse(res, 400, "You cannot delete your own account");
     }
-    
+
     // Delete the user
     await User.findByIdAndDelete(id);
-    
+
     return successResponse(res, 200, "User deleted successfully");
+  } catch (error) {
+    return errorResponse(res, 500, error.message);
+  }
+};
+
+exports.deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Delete the user
+    await User.findByIdAndDelete(userId);
+
+    return successResponse(res, 200, "Account deleted successfully");
   } catch (error) {
     return errorResponse(res, 500, error.message);
   }

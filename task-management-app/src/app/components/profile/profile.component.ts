@@ -26,6 +26,20 @@ export class ProfileComponent implements OnInit {
     this.router.navigate(['/login']);
   }
 
+  deleteAccount() {
+    if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      this.usersService.deleteAccount().subscribe({
+        next: () => {
+          this.auth.logout();
+          this.router.navigate(['/login']);
+        },
+        error: (err) => {
+          this.error.set(err?.error?.message || 'Failed to delete account');
+        },
+      });
+    }
+  }
+
   getProfile() {
     this.loading.set(true);
     this.usersService.getProfile().subscribe({

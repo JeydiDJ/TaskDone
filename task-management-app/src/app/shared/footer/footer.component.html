@@ -14,33 +14,6 @@
                 </p>
             </div>
 
-            <!-- Quick Links -->
-            <div class="mb-6 md:mb-0">
-                <h3 class="text-lg font-bold mb-4 text-gray-800">Quick Links</h3>
-                <ul class="space-y-3">
-                    <li><a routerLink="/" class="text-gray-600 hover:text-indigo-600 transition-colors duration-200 flex items-center">
-                        <i class="fas fa-home mr-2 text-sm"></i>Home
-                    </a></li>
-                    @if (!isLoggedIn()) {
-                        <li><a routerLink="/login" class="text-gray-600 hover:text-indigo-600 transition-colors duration-200 flex items-center">
-                            <i class="fas fa-sign-in-alt mr-2 text-sm"></i>Login
-                        </a></li>
-                        <li><a routerLink="/register" class="text-gray-600 hover:text-indigo-600 transition-colors duration-200 flex items-center">
-                            <i class="fas fa-user-plus mr-2 text-sm"></i>Register
-                        </a></li>
-                    } @else {
-                        <li><a routerLink="/tasks" class="text-gray-600 hover:text-indigo-600 transition-colors duration-200 flex items-center">
-                            <i class="fas fa-list-check mr-2 text-sm"></i>My Tasks
-                        </a></li>
-                        @if (isAdmin()) {
-                            <li><a routerLink="/users" class="text-gray-600 hover:text-indigo-600 transition-colors duration-200 flex items-center">
-                                <i class="fas fa-users mr-2 text-sm"></i>Users
-                            </a></li>
-                        }
-                    }
-                </ul>
-            </div>
-
             <!-- Contact -->
             <div>
                 <h3 class="text-lg font-bold mb-4 text-gray-800">Connect</h3>

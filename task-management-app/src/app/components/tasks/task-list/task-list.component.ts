@@ -52,6 +52,9 @@ export class TaskListComponent implements OnInit {
   showReminder = signal<boolean>(false);
   reminderMessage = signal<string>('');
 
+  showCongratulation = signal<boolean>(false);
+  congratulationMessage = signal<string>('');
+
   constructor() {}
 
   ngOnInit() {
@@ -185,6 +188,7 @@ export class TaskListComponent implements OnInit {
         if (response.status === 'success' && response.data) {
           this.allTasks.set(response.data.tasks || []);
           this.checkGentleReminder();
+          this.checkCongratulation();
         }
       },
       error: (error) => {
@@ -387,5 +391,33 @@ export class TaskListComponent implements OnInit {
 
   dismissReminder() {
     this.showReminder.set(false);
+  }
+
+  checkCongratulation() {
+    const now = new Date();
+    const today = now.toDateString();
+
+    // Filter completed tasks for today
+    const todayCompletedTasks = this.allTasks().filter(task => {
+      if (!task.completed || !task.updatedAt) return false;
+      const completedDate = new Date(task.updatedAt).toDateString();
+      return completedDate === today;
+    });
+
+    const count = todayCompletedTasks.length;
+    const milestone = Math.floor(count / 5) * 5; // Get the current milestone (5, 10, 15, etc.)
+    const milestoneKey = `congratulationShown_${today}_${milestone}`;
+
+    // If we haven't shown the congratulation for this milestone yet and count is multiple of 5
+    if (milestone >= 5 && count % 5 === 0 && !localStorage.getItem(milestoneKey)) {
+      this.congratulationMessage.set("That's a lot of Task Done, proud of the effort you made today. This is growth, celebrate it.");
+      this.showCongratulation.set(true);
+      // Mark that congratulation was shown for this milestone
+      localStorage.setItem(milestoneKey, 'true');
+    }
+  }
+
+  dismissCongratulation() {
+    this.showCongratulation.set(false);
   }
 }

@@ -22,4 +22,8 @@ export class UsersService {
   getProfile(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/profile`);
   }
+
+  deleteAccount(): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/delete-account`);
+  }
 }
