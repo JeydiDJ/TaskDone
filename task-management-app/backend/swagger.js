@@ -8,8 +8,8 @@ const options = {
       version: '1.0.0',
       description: 'API documentation for the Task Management application',
       contact: {
-        name: 'Manthan Ankolekar',
-        url: 'https://task-management-app-manthanank.vercel.app/',
+        name: 'taskdone',
+        url: 'https://https://task-done-g10-git-main-michael-usi-jrs-projects.vercel.app/',
       },
     },
     servers: [
@@ -18,7 +18,7 @@ const options = {
         description: 'Development server',
       },
       {
-        url: 'https://task-management-app-8t3d.vercel.app',
+        url: 'https://https://task-done-g10-git-main-michael-usi-jrs-projects.vercel.app',
         description: 'Production server',
       },
     ],
