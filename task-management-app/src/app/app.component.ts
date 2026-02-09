@@ -36,7 +36,7 @@ export class AppComponent implements OnInit {
       },
       { property: 'og:title', content: 'Task Management App' },
       { name: 'author', content: 'Group10' },
-      { name: 'keywords', content: 'angular, nodejs. express, mongodb' },
+      { name: 'keywords', content: 'task management, task management angular nodejs. express mongodb, task done' },
       { name: 'robots', content: 'index, follow' },
       {
         property: 'og:description',
