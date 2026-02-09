@@ -21,13 +21,7 @@ export class NavbarComponent {
     return this.authService.isAuthenticated();
   }
 
-  isAdmin(): boolean {
-    return this.authService.isAdmin() && this.authService.isAuthenticated();
-  }
 
-  isSuperAdmin(): boolean {
-    return this.authService.isSuper() && this.authService.isAuthenticated();
-  }
 
   logout() {
     this.authService.logout();

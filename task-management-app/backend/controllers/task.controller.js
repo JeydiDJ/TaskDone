@@ -245,8 +245,8 @@ exports.deleteTask = async (req, res) => {
     }
     
     // Check if the user is authorized to delete this task
-    // Allow task creator or admin to delete
-    if (task.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    // Only allow task creator to delete
+    if (task.user.toString() !== req.user._id.toString()) {
       return errorResponse(res, 403, "Not authorized to delete this task");
     }
     

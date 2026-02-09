@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/user.controller");
-const { auth, isAdmin } = require("../middleware/auth.middleware");
+const { auth, } = require("../middleware/auth.middleware");
 
 /**
  * @swagger
@@ -63,43 +63,7 @@ const { auth, isAdmin } = require("../middleware/auth.middleware");
  */
 router.get("/", auth, userController.getUsers);
 
-/**
- * @swagger
- * /api/users/organization:
- *   get:
- *     tags:
- *       - Users
- *     summary: Get users by organization
- *     description: Retrieve a list of users from the same organization as the logged-in user
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: A list of users from the same organization
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: success
- *                 message:
- *                   type: string
- *                   example: Users retrieved successfully
- *                 data:
- *                   type: object
- *                   properties:
- *                     users:
- *                       type: array
- *                       items:
- *                         $ref: '#/components/schemas/User'
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Server error
-*/
-router.get("/organization", auth, userController.getUsersByOrganization);
+
 
 /**
  * @swagger
@@ -172,7 +136,7 @@ router.get("/:id", auth, userController.getUser);
  *     tags:
  *       - Users
  *     summary: Update user
- *     description: Update a user's information (admin only or self)
+ *     description: Update a user's information (self only)
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -201,7 +165,7 @@ router.get("/:id", auth, userController.getUser);
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden - Admin only or own account
+ *         description: Forbidden - Own account only
  *       404:
  *         description: User not found
  *       500:
@@ -232,13 +196,13 @@ router.put("/:id", auth, userController.updateUser);
  *       401:
  *         description: Unauthorized
  *       403:
- *         description: Forbidden - Admin only
+ *         description: Forbidden - Own account only
  *       404:
  *         description: User not found
  *       500:
  *         description: Server error
  */
-router.delete("/:id", auth, isAdmin, userController.deleteUser);
+router.delete("/:id", auth, userController.deleteUser);
 
 /**
  * @swagger

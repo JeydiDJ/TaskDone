@@ -19,7 +19,7 @@ export class RegisterComponent {
   registerForm: FormGroup;
   error = signal<string>('');
   showPassword = signal<boolean>(false);
-  isAdmin = signal<boolean>(false);
+
 
   authService = inject(AuthService);
   router = inject(Router);
@@ -36,21 +36,13 @@ export class RegisterComponent {
     });
   }
 
-  ngOnInit(): void {
-    // Initialize the form based on the default role
-    this.updateRoleSelection();
-  }
+
 
   togglePasswordVisibility(): void {
     this.showPassword.update((state) => !state);
   }
 
-  updateRoleSelection() {
-    const roleControl = this.registerForm.get('role');
 
-    // Update signals for template
-    this.isAdmin.set(roleControl?.value === 'admin');
-  }
 
   onSubmit() {
     if (this.registerForm.invalid) {
@@ -64,9 +56,7 @@ export class RegisterComponent {
 
     const data = {
       email: this.registerForm.value.email,
-      password: this.registerForm.value.password,
-      organization: this.registerForm.value.organization,
-      role: this.registerForm.value.role
+      password: this.registerForm.value.password
     };
 
     this.authService.register(data).subscribe({

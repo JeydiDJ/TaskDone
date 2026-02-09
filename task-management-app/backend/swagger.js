@@ -4,12 +4,12 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Task Management API',
+      title: 'TaskDone API',
       version: '1.0.0',
       description: 'API documentation for the Task Management application',
       contact: {
         name: 'taskdone',
-        url: 'https://https://task-done-g10-git-main-michael-usi-jrs-projects.vercel.app/',
+        url: 'https://task-done-g10.vercel.app/',
       },
     },
     servers: [
@@ -18,7 +18,7 @@ const options = {
         description: 'Development server',
       },
       {
-        url: 'https://https://task-done-g10-git-main-michael-usi-jrs-projects.vercel.app',
+        url: 'https://task-done-g10.vercel.app/',
         description: 'Production server',
       },
     ],

@@ -303,9 +303,7 @@ export class TaskListComponent implements OnInit {
     this.loadUnfinishedTasks(this.unfinishedCurrentPage(), this.unfinishedItemsPerPage());
   }
 
-  isAdmin() {
-    return this.auth.isAdmin();
-  }
+
 
   checkReminders() {
     const now = new Date();
@@ -385,9 +383,7 @@ export class TaskListComponent implements OnInit {
     }
   }
 
-  isSuperAdmin() {
-    return this.auth.isSuper();
-  }
+
 
   dismissReminder() {
     this.showReminder.set(false);

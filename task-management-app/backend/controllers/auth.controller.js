@@ -25,9 +25,6 @@ const crypto = require("crypto");
  *             email:
  *               type: string
  *               description: User email
- *             role:
- *               type: string
- *               description: User role
  *         success:
  *           type: boolean
  *           description: Success status
@@ -39,20 +36,16 @@ const crypto = require("crypto");
 // Register a new user
 exports.register = async (req, res) => {
   try {
-    const { email, password, role } = req.body;
+    const { email, password } = req.body;
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Validate role
-    let userRole = (role === 'admin' || role === 'super') ? role : 'user';
-
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new User({
       email,
-      password: hashedPassword,
-      role: userRole
+      password: hashedPassword
     });
     await newUser.save();
     const token = generateToken(newUser);
@@ -64,8 +57,7 @@ exports.register = async (req, res) => {
         expiresIn: 3600,
         user: {
           _id: newUser._id,
-          email: newUser.email,
-          role: newUser.role
+          email: newUser.email
         },
         success: true,
         message: 'User registered successfully'

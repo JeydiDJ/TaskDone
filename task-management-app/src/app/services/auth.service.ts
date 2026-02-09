@@ -24,7 +24,7 @@ export class AuthService {
   register(user: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/register`, user).pipe(
       tap((response: any) => {
-        this.handleAuthentication(response.token, response.expiresIn, response.user.role);
+        this.handleAuthentication(response.token, response.expiresIn);
       })
     );
   }
@@ -32,7 +32,7 @@ export class AuthService {
   login(user: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, user).pipe(
       tap((response: any) => {
-        this.handleAuthentication(response.token, response.expiresIn, response.user.role);
+        this.handleAuthentication(response.token, response.expiresIn);
       })
     );
   }
@@ -45,28 +45,13 @@ export class AuthService {
     return !!sessionStorage.getItem('token');
   }
 
-  isAdmin(): boolean {
-    const role = sessionStorage.getItem('role');
-    return role === 'admin';
-  }
-
-  isSuper(): boolean {
-    const role = sessionStorage.getItem('role');
-    return role === 'super';
-  }
-
   getToken(): string | null {
     return sessionStorage.getItem('token');
-  }
-
-  getCurrentUserRole(): string | null {
-    return sessionStorage.getItem('role');
   }
 
   logout() {
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('tokenExpirationDate');
-    sessionStorage.removeItem('role');
     sessionStorage.removeItem('user');
     if (this.tokenExpirationTimer) {
       clearTimeout(this.tokenExpirationTimer);
@@ -84,13 +69,12 @@ export class AuthService {
     });
   }
 
-  private handleAuthentication(token: string, expiresIn: number, role: string) {
-    const user = { token, expiresIn, role };
+  private handleAuthentication(token: string, expiresIn: number) {
+    const user = { token, expiresIn };
     const expirationDate = new Date(new Date().getTime() + expiresIn * 1000);
     sessionStorage.setItem('token', token);
     sessionStorage.setItem('user', JSON.stringify(user));
     sessionStorage.setItem('tokenExpirationDate', expirationDate.toISOString());
-    sessionStorage.setItem('role', role);
     this.autoLogout(expiresIn * 1000);
   }
 
