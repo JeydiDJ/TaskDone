@@ -49,7 +49,11 @@ export class TaskService {
     const headers = new HttpHeaders({
       'Content-Type': 'application/json'
     });
-    
+
     return this.http.delete<any>(`${this.apiUrl}/${id}`, { headers });
+  }
+
+  getProgressStats(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/progress`);
   }
 }

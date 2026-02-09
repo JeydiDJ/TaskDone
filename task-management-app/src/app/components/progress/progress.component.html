@@ -1,0 +1,52 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold text-gray-800 mb-8">My Progress</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Placeholder for progress statistics -->
+      <div class="card">
+        <div class="flex items-center space-x-4">
+          <div class="p-3 rounded-lg bg-green-100">
+            <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800">Completed Tasks</h3>
+            <p class="text-2xl font-bold text-green-600">{{ completedTasks }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="flex items-center space-x-4">
+          <div class="p-3 rounded-lg bg-yellow-100">
+            <i class="fas fa-clock text-yellow-600 text-2xl"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800">Pending Tasks</h3>
+            <p class="text-2xl font-bold text-yellow-600">{{ pendingTasks }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="flex items-center space-x-4">
+          <div class="p-3 rounded-lg bg-blue-100">
+            <i class="fas fa-chart-line text-blue-600 text-2xl"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800">Overall Progress</h3>
+            <p class="text-2xl font-bold text-blue-600">{{ overallProgress }}%</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Placeholder for future charts or detailed progress -->
+    <div class="card mt-8">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Progress Overview</h2>
+      <p class="text-gray-600">Detailed progress charts and statistics will be displayed here.</p>
+    </div>
+  </div>
+</div>
+
+

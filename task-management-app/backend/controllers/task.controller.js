@@ -236,25 +236,66 @@ exports.updateTask = async (req, res) => {
 exports.deleteTask = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     // Find the task first to ensure it exists
     const task = await Task.findById(id);
-    
+
     if (!task) {
       return errorResponse(res, 404, "Task not found");
     }
-    
+
     // Check if the user is authorized to delete this task
     // Only allow task creator to delete
     if (task.user.toString() !== req.user._id.toString()) {
       return errorResponse(res, 403, "Not authorized to delete this task");
     }
-    
+
     // Delete the task
     await Task.findByIdAndDelete(id);
-    
+
     successResponse(res, 200, "Task deleted successfully");
   } catch (error) {
     errorResponse(res, 500, error.message);
+  }
+};
+
+// Get progress statistics for the authenticated user
+exports.getProgressStats = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Count completed tasks
+    const completedTasks = await Task.countDocuments({
+      user: userId,
+      completed: true
+    });
+
+    // Count pending tasks (ongoing + unfinished)
+    const ongoingTasks = await Task.countDocuments({
+      user: userId,
+      completed: false,
+      deadline: { $gte: new Date() } // Not overdue
+    });
+
+    const unfinishedTasks = await Task.countDocuments({
+      user: userId,
+      completed: false,
+      deadline: { $lt: new Date() } // Overdue
+    });
+
+    const pendingTasks = ongoingTasks + unfinishedTasks;
+
+    // Calculate overall progress percentage
+    const totalTasks = completedTasks + pendingTasks;
+    const overallProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+    successResponse(res, 200, "Progress statistics retrieved successfully", {
+      completedTasks,
+      pendingTasks,
+      overallProgress
+    });
+  } catch (error) {
+    console.error('Error getting progress stats:', error);
+    errorResponse(res, 500, "An error occurred while retrieving progress statistics. Please try again.");
   }
 };

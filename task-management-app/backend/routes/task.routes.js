@@ -192,6 +192,38 @@ router.get("/unfinished", auth, taskController.getUnfinishedTasks);
 
 /**
  * @swagger
+ * /api/tasks/progress:
+ *  get:
+ *    tags:
+ *      - Tasks
+ *    summary: Get progress statistics
+ *    description: Retrieves progress statistics for the authenticated user (completed tasks, pending tasks, overall progress percentage)
+ *    security:
+ *      - bearerAuth: []
+ *    responses:
+ *      200:
+ *        description: Progress statistics retrieved successfully
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                completedTasks:
+ *                  type: integer
+ *                  description: Number of completed tasks
+ *                pendingTasks:
+ *                  type: integer
+ *                  description: Number of pending tasks
+ *                overallProgress:
+ *                  type: integer
+ *                  description: Overall progress percentage (0-100)
+ *      500:
+ *        description: Server error
+ */
+router.get("/progress", auth, taskController.getProgressStats);
+
+/**
+ * @swagger
  * /api/tasks/{id}:
  *  get:
  *    tags:
