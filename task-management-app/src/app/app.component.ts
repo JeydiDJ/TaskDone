@@ -5,6 +5,7 @@ import { NavbarComponent } from './shared/navbar/navbar.component';
 import { Meta } from '@angular/platform-browser';
 import { TrackService } from './services/track.service';
 import { Visit } from './core/models/visit.model';
+import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -20,6 +21,7 @@ export class AppComponent implements OnInit {
   visitorCountError = signal<string | null>(null);
 
   private trackService = inject(TrackService);
+  private authService = inject(AuthService);
   meta = inject(Meta);
 
   constructor() {
@@ -30,7 +32,7 @@ export class AppComponent implements OnInit {
       { rel: 'icon', type: 'image/x-icon', href: '' },
       {
         rel: 'canonical',
-        href: 'https://https://task-done-g10-git-main-michael-usi-jrs-projects.vercel.app//',
+        href: 'https://task-done-g10.vercel.app/',
       },
       { property: 'og:title', content: 'Task Management App' },
       { name: 'author', content: 'Group10' },
@@ -43,16 +45,17 @@ export class AppComponent implements OnInit {
       },
       {
         property: 'og:image',
-        content: 'https://https://task-done-g10-git-main-michael-usi-jrs-projects.vercel.app/',
+        content: 'https://task-done-g10.vercel.app/',
       },
       {
         property: 'og:url',
-        content: 'https://https://task-done-g10-git-main-michael-usi-jrs-projects.vercel.app//',
+        content: 'https://task-done-g10.vercel.app/',
       },
     ]);
   }
 
   ngOnInit() {
+    this.authService.autoLogin();
     this.trackVisit();
   }
 

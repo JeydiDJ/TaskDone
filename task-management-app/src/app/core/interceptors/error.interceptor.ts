@@ -11,14 +11,10 @@ export const ErrorInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error) => {
       if (
         error.status === 401 ||
-        error.status === 403 ||
-        error.status === 404
+        error.status === 403
       ) {
         authService.logout();
-        // Don't redirect to login for POST /tasks, let the component handle it
-        if (!(req.url.includes('/tasks') && req.method === 'POST')) {
-          router.navigate(['/login']); // Redirect to login after logout
-        }
+        router.navigate(['/login']); // Redirect to login after logout
       }
       return throwError(() => error);
     })
