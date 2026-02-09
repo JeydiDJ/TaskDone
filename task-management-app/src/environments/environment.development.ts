@@ -1,8 +1,7 @@
 export const environment = {
   production: false,
-  apiUrl: 
+  apiUrl:
     window.location.hostname === 'localhost'
       ? 'http://localhost:3000/api'
       : 'https://taskdone-production.up.railway.app/api',
-  trackingApiUrl: 'https://taskdone-production.up.railway.app/api/visit',
 };

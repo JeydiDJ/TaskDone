@@ -1,10 +1,8 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { FooterComponent } from './shared/footer/footer.component';
 import { NavbarComponent } from './shared/navbar/navbar.component';
 import { Meta } from '@angular/platform-browser';
-import { TrackService } from './services/track.service';
-import { Visit } from './core/models/visit.model';
 import { AuthService } from './services/auth.service';
 
 @Component({
@@ -15,12 +13,6 @@ import { AuthService } from './services/auth.service';
 export class AppComponent implements OnInit {
   title = 'task-management-app';
 
-  // Visitor count state
-  visitorCount = signal<number>(0);
-  isVisitorCountLoading = signal<boolean>(false);
-  visitorCountError = signal<string | null>(null);
-
-  private trackService = inject(TrackService);
   private authService = inject(AuthService);
   meta = inject(Meta);
 
@@ -56,23 +48,5 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
     this.authService.autoLogin();
-    this.trackVisit();
-  }
-
-  private trackVisit(): void {
-    this.isVisitorCountLoading.set(true);
-    this.visitorCountError.set(null);
-
-    this.trackService.trackProjectVisit(this.title).subscribe({
-      next: (response: Visit) => {
-        this.visitorCount.set(response.uniqueVisitors);
-        this.isVisitorCountLoading.set(false);
-      },
-      error: (err: Error) => {
-        console.error('Failed to track visit:', err);
-        this.visitorCountError.set('Failed to load visitor count');
-        this.isVisitorCountLoading.set(false);
-      },
-    });
   }
 }
