@@ -15,14 +15,9 @@ const mongoose = require("mongoose");
  *         email:
  *           type: string
  *           description: User's email address
- *         role:
- *           type: string
- *           enum: [user, admin]
- *           description: User's role
  *       example:
  *         _id: 60d21b4667d0d8992e610c85
- *         email: user@example.com
- *         role: user
+ *         email: user@example.com   
  */
 
 const userSchema = new mongoose.Schema({
