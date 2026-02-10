@@ -55,6 +55,10 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+.animate-slide-up-fade {
+  animation: slide-up-fade 0.5s forwards;
+}
+
 .fade-in {
   animation: fadeIn 0.5s ease-out;
 }
@@ -75,4 +79,49 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary-color);
+}
+
+/* Modal Slide Up + Fade Animations */
+
+/* Entrance: Slide up from bottom + fade in */
+@keyframes modal-slide-up-in {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Exit: Slide down + fade out */
+@keyframes modal-slide-down-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+}
+
+/* Overlay fade out */
+@keyframes overlay-fade-out {
+  0% { opacity: 0.4; }
+  100% { opacity: 0; }
+}
+
+/* Classes to apply */
+.modal-slide-up-in {
+  animation: modal-slide-up-in 0.5s ease-out forwards;
+}
+
+.modal-slide-down-out {
+  animation: modal-slide-down-out 0.5s ease-in forwards;
+}
+
+.overlay-fade-out {
+  animation: overlay-fade-out 0.5s ease-in forwards;
 }
