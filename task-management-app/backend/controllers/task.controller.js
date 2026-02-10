@@ -64,7 +64,7 @@ exports.getAllTasks = async (req, res) => {
 exports.getOngoingTasks = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 100;
     const skip = (page - 1) * limit;
     const now = new Date();
 

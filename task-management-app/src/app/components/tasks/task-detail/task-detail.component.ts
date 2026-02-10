@@ -117,10 +117,10 @@ export class TaskDetailComponent implements OnInit {
   const taskId = this.task()._id;
   const updatedTask = { completed: true };
 
+  // Mark task as complete in backend
   this.taskService.updateTask(taskId, updatedTask).subscribe({
     next: (response) => {
-      // Update current task locally
-      if (response && response.data) {
+      if (response?.data) {
         this.task.set(response.data);
         this.isCompleted.set(true);
       }
@@ -130,17 +130,8 @@ export class TaskDetailComponent implements OnInit {
       // Fetch all tasks from backend
       this.taskService.getAllTasks().subscribe({
         next: (tasksResponse) => {
-          let tasksArray: any[] = [];
-
-          // Access the actual tasks array returned by backend
-          if (tasksResponse?.data?.tasks && Array.isArray(tasksResponse.data.tasks)) {
-            tasksArray = tasksResponse.data.tasks;
-          } else if (Array.isArray(tasksResponse)) {
-            tasksArray = tasksResponse;
-          } else {
-            console.error('Unexpected tasks response format:', tasksResponse);
-            tasksArray = [];
-          }
+          // Correctly read the tasks array from data.tasks
+          const tasksArray: any[] = tasksResponse?.data?.tasks ?? [];
 
           // Mark the just-completed task as completed locally
           const updatedTasks = tasksArray.map(t =>
@@ -152,7 +143,7 @@ export class TaskDetailComponent implements OnInit {
           console.log('All tasks after update:', updatedTasks);
           console.log('Unfinished tasks:', this.unfinishedTasks());
 
-          // Show popup modal
+          // Show modal
           this.showCongratsModal.set(true);
 
           // Auto-close after 5 seconds
@@ -163,16 +154,18 @@ export class TaskDetailComponent implements OnInit {
           this.allTasks.set([]);
           this.showCongratsModal.set(true);
           setTimeout(() => this.closeCongratsModal(), 5000);
-        },
+        }
       });
     },
     error: (error) => {
       console.error('Error completing task:', error);
       this.error.set(error?.error?.message || 'Error marking task as complete');
       this.loading.set(false);
-    },
+    }
   });
 }
+
+
 
 
 
