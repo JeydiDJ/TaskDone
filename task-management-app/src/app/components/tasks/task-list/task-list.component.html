@@ -305,11 +305,9 @@
 
 <div
   *ngIf="showOverdueAlert()"
-  class="fixed top-5 right-5 z-50
-         bg-red-600 text-white
-         rounded-xl shadow-lg p-4 w-96
-         transition-all duration-500 ease-out
-         animate-slide-in-custom"
+  class="fixed top-5 right-5 z-50 bg-red-600 text-white rounded-xl shadow-lg p-4
+         w-11/12 max-w-sm sm:w-96
+         animate-slide-in"
 >
   <div class="flex justify-between items-start">
     <h3 class="font-bold text-lg">⚠ Overdue Tasks</h3>
@@ -325,7 +323,7 @@
     You have {{ overdueTasks().length }} overdue task(s):
   </p>
 
-  <ul class="mt-2 list-disc list-inside text-sm space-y-1">
+  <ul class="mt-2 list-disc list-inside text-sm space-y-1 max-h-48 overflow-y-auto">
     <li *ngFor="let task of overdueTasks().slice(0, 3)">
       {{ task.title }}
     </li>
