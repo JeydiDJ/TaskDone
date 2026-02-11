@@ -21,7 +21,7 @@ export class AppComponent implements OnInit {
       { name: 'description', content: 'An Angular task management app' },
       { charset: 'UTF-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { rel: 'icon', type: 'image/x-icon', href: '' },
+      { rel: 'icon', type: 'image/x-icon', href:'src/favicon.ico' },
       {
         rel: 'canonical',
         href: 'https://task-done-g10.vercel.app/',

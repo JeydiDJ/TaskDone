@@ -79,7 +79,7 @@ export class TaskFormComponent {
         if (daysDiff === 1) {
           reminderMessage = "Hey! Since you set the deadline in just 1 day, you'll get a reminder later to complete it. Do well and get that Task Done";
         } else {
-          reminderMessage = "Hey! Since you set the deadline for more than a day, you'll be reminded 1 day before the deadline. Do well and get that Task Done";
+          reminderMessage = "Hey! Since you set the deadline for more than a day, you'll be reminded for the deadline to accomplish it. Do well and get that Task Done";
         }
 
         // Navigate to tasks list with reminder data
