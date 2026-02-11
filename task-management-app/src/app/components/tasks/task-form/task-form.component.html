@@ -103,40 +103,49 @@
                             <i class="far fa-calendar-alt text-gray-400"></i>
                         </div>
                         <input
-                            type="date"
+                            type="datetime-local"
                             id="startDate"
                             formControlName="startDate"
-                            [min]="minDate"
+                            [min]="minDateTime"
                             class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
+                                                                        >
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Deadline -->
-                    <div>
-                        <label for="deadline" class="block text-sm font-medium text-gray-700 mb-1">Deadline <span class="text-red-500">*</span></label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="far fa-calendar-alt text-gray-400"></i>
-                            </div>
-                            <input 
-                                type="date" 
-                                id="deadline"
-                                formControlName="deadline" 
-                                [min]="minDate" 
-                                class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            >
+                <div>
+                    <label for="deadline" class="block text-sm font-medium text-gray-700 mb-1">Deadline <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="far fa-calendar-alt text-gray-400"></i>
                         </div>
-                        @if (taskForm.get('deadline')?.invalid && (taskForm.get('deadline')?.touched || taskForm.get('deadline')?.dirty)) {
-                            <div class="mt-1 text-sm text-red-600">
-                                @if (taskForm.get('deadline')?.errors?.['required']) {
-                                    <p><i class="fas fa-info-circle mr-1"></i>Deadline is required</p>
-                                }
-                            </div>
+                        <input 
+                            type="datetime-local" 
+                            id="deadline"
+                            formControlName="deadline" 
+                            [min]="minDateTime" 
+                            class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                    </div>
+
+                    <!-- Validation Errors -->
+                    <div class="mt-1 text-sm text-red-600">
+                        <!-- Required -->
+                        @if (taskForm.get('deadline')?.errors?.['required'] && (taskForm.get('deadline')?.touched || taskForm.get('deadline')?.dirty)) {
+                            <p><i class="fas fa-info-circle mr-1"></i>Deadline is required</p>
+                        }
+
+                        <!-- Custom Validator: deadlineBeforeStart -->
+                        @if (taskForm.errors?.['deadlineBeforeStart'] && (taskForm.get('deadline')?.touched || taskForm.get('deadline')?.dirty || taskForm.get('startDate')?.touched || taskForm.get('startDate')?.dirty)) {
+                            <p><i class="fas fa-info-circle mr-1"></i>Deadline must be after start date</p>
                         }
                     </div>
-                    
+                </div>
+
+
+
+
                     <!-- Priority -->
                     <div>
                         <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Priority <span class="text-red-500">*</span></label>

@@ -8,16 +8,16 @@ import {
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
-import { NgClass } from '@angular/common';
+import { NgClass, NgIf } from '@angular/common';
 
 @Component({
     selector: 'app-task-form',
-    imports: [ReactiveFormsModule, NgClass, RouterLink],
+    imports: [ReactiveFormsModule, NgClass, RouterLink, NgIf],
     templateUrl: './task-form.component.html',
 })
 export class TaskFormComponent {
   taskForm: FormGroup;
-  minDate: string = new Date().toISOString().split('T')[0];
+  minDateTime: string;
   errorMessage = signal<string>('');
   showReminder = signal<boolean>(false);
   reminderMessage = signal<string>('');
@@ -28,13 +28,22 @@ export class TaskFormComponent {
   fb = inject(FormBuilder);
 
   constructor() {
+    const now = new Date();
+    this.minDateTime = now.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:mm"
+
     this.taskForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(3)]],
       description: ['', [Validators.required, Validators.minLength(3)]],
-      startDate: [this.minDate],
-      deadline: [this.minDate, Validators.required],
+      startDate: [this.minDateTime],
+      deadline: [this.minDateTime, Validators.required],
       priority: ['', Validators.required],
-    });
+    },  { validators: this.deadlineAfterStartDate });
+  }
+
+  deadlineAfterStartDate(group: FormGroup) {
+    const start = new Date(group.get('startDate')?.value);
+    const end = new Date(group.get('deadline')?.value);
+    return end >= start ? null : { deadlineBeforeStart: true };
   }
 
   createTask() {
