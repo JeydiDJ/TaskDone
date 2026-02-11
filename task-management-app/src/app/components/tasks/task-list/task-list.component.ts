@@ -2,12 +2,13 @@ import { Component, inject, OnInit, signal, OnDestroy } from '@angular/core';
 import { TaskService } from '../../../services/task.service';
 import { Task } from '../../../core/models/tasks.model';
 import { RouterLink, ActivatedRoute } from '@angular/router';
-import { NgClass, DatePipe } from '@angular/common';
+import { NgClass, DatePipe, NgIf, NgFor } from '@angular/common';
 import { AuthService } from '../../../services/auth.service';
+import { effect } from '@angular/core';
 
 @Component({
     selector: 'app-task-list',
-    imports: [RouterLink, NgClass, DatePipe],
+    imports: [RouterLink, NgClass, DatePipe, NgIf, NgFor],
     templateUrl: './task-list.component.html',
 })
 export class TaskListComponent implements OnInit {
@@ -55,7 +56,18 @@ export class TaskListComponent implements OnInit {
   showCongratulation = signal<boolean>(false);
   congratulationMessage = signal<string>('');
 
-  constructor() {}
+  showOverdueAlert = signal<boolean>(false);
+  overdueTasks = signal<Task[]>([]);
+  hasCheckedOverdue = false;
+  closingOverdueAlert = signal<boolean>(false);
+
+  constructor() {
+     effect(() => {
+    if (this.showOverdueAlert()) {
+      this.playAlertSound();
+    }
+  });
+  }
 
   ngOnInit() {
     this.loadPendingTasks(this.pendingCurrentPage(), this.pendingItemsPerPage());
@@ -146,6 +158,7 @@ export class TaskListComponent implements OnInit {
           this.unfinishedCurrentPage.set(response.data.currentPage || 1);
           this.unfinishedTotalTasks.set(response.data.totalTasks || 0);
           this.unfinishedPaginatedTasks.set(response.data.tasks || []);
+          this.checkOverdueTasks();
         } else {
           this.unfinishedError.set('Invalid response format from server');
         }
@@ -216,6 +229,38 @@ export class TaskListComponent implements OnInit {
     this.pendingPaginatedTasks.set(
       this.pendingTasks().slice(startIndex, endIndex)
     );
+  }
+
+  checkOverdueTasks() {
+  if (this.hasCheckedOverdue) return;
+
+  const now = new Date();
+
+  const overdue = this.unfinishedTasks().filter(task => {
+    if (!task.deadline) return false;
+    return new Date(task.deadline) < now;
+  });
+
+  if (overdue.length > 0) {
+    this.overdueTasks.set(overdue);
+    this.showOverdueAlert.set(true);
+    this.hasCheckedOverdue = true;
+    this.closingOverdueAlert.set(false);
+    }
+  }
+
+  closeOverdueAlert() {
+  this.closingOverdueAlert.set(true);
+
+  setTimeout(() => {
+    this.showOverdueAlert.set(false);
+    this.closingOverdueAlert.set(false);
+    }, 400); 
+  }
+
+  playAlertSound() {
+  const audio = new Audio('assets/sounds/alert-popup.wav')
+  audio.play().catch(err => console.error('Error playing sound:', err));
   }
 
   nextCompletedPage() {

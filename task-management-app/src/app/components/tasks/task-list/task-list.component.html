@@ -301,3 +301,37 @@
         </div>
     }
 </div>
+
+
+<div
+  *ngIf="showOverdueAlert()"
+  class="fixed top-5 right-5 z-50
+         bg-red-600 text-white
+         rounded-xl shadow-lg p-4 w-96
+         transition-all duration-500 ease-out
+         animate-slide-in-custom"
+>
+  <div class="flex justify-between items-start">
+    <h3 class="font-bold text-lg">⚠ Overdue Tasks</h3>
+    <button
+      class="text-xl leading-none"
+      (click)="showOverdueAlert.set(false)"
+    >
+      ×
+    </button>
+  </div>
+
+  <p class="mt-2 text-sm">
+    You have {{ overdueTasks().length }} overdue task(s):
+  </p>
+
+  <ul class="mt-2 list-disc list-inside text-sm space-y-1">
+    <li *ngFor="let task of overdueTasks().slice(0, 3)">
+      {{ task.title }}
+    </li>
+  </ul>
+
+  <p *ngIf="overdueTasks().length > 3" class="mt-1 text-xs italic">
+    And {{ overdueTasks().length - 3 }} more…
+  </p>
+</div>
