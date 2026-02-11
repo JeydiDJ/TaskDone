@@ -201,29 +201,40 @@ exports.getTaskById = async (req, res) => {
 exports.updateTask = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    // Find the task first to ensure it exists
+    const updateData = { ...req.body };
+
+    // Find the task first
     const task = await Task.findById(id);
-    
+
     if (!task) {
       return res.status(404).json({
         status: 'error',
         message: 'Task not found'
       });
     }
-    
-    // Update with the data from the request
+
+    // If marking as completed for the first time
+    if (updateData.completed === true && !task.completed) {
+      updateData.completedAt = new Date();
+    }
+
+    // If marking as NOT completed
+    if (updateData.completed === false && task.completed) {
+      updateData.completedAt = null;
+    }
+
     const updatedTask = await Task.findByIdAndUpdate(
-      id, 
-      req.body,
-      { new: true } // Return the updated document
-    ).populate('user', 'email'); // Populate user info
-    
+      id,
+      updateData,
+      { new: true }
+    ).populate('user', 'email');
+
     return res.status(200).json({
       status: 'success',
       message: 'Task updated successfully',
       data: updatedTask
     });
+
   } catch (error) {
     return res.status(500).json({
       status: 'error',
@@ -231,6 +242,7 @@ exports.updateTask = async (req, res) => {
     });
   }
 };
+
 
 // Delete a task
 exports.deleteTask = async (req, res) => {
@@ -264,38 +276,42 @@ exports.getProgressStats = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Count completed tasks
     const completedTasks = await Task.countDocuments({
       user: userId,
       completed: true
     });
 
-    // Count pending tasks (ongoing + unfinished)
     const ongoingTasks = await Task.countDocuments({
       user: userId,
       completed: false,
-      deadline: { $gte: new Date() } // Not overdue
+      deadline: { $gte: new Date() }
     });
 
     const unfinishedTasks = await Task.countDocuments({
       user: userId,
       completed: false,
-      deadline: { $lt: new Date() } // Overdue
+      deadline: { $lt: new Date() }
     });
 
     const pendingTasks = ongoingTasks + unfinishedTasks;
 
-    // Calculate overall progress percentage
     const totalTasks = completedTasks + pendingTasks;
     const overallProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+    // Get completed tasks with completedAt for bar chart
+    const tasks = await Task.find({ user: userId, completed: true })
+                            .select('completedAt -_id')
+                            .lean();
 
     successResponse(res, 200, "Progress statistics retrieved successfully", {
       completedTasks,
       pendingTasks,
-      overallProgress
+      overallProgress,
+      tasks
     });
   } catch (error) {
     console.error('Error getting progress stats:', error);
     errorResponse(res, 500, "An error occurred while retrieving progress statistics. Please try again.");
   }
 };
+

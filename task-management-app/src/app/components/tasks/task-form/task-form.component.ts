@@ -12,7 +12,7 @@ import { NgClass } from '@angular/common';
 
 @Component({
     selector: 'app-task-form',
-    imports: [ReactiveFormsModule, NgClass, RouterLink],
+    imports: [ReactiveFormsModule, NgClass, RouterLink, ],
     templateUrl: './task-form.component.html',
 })
 export class TaskFormComponent {
