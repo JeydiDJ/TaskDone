@@ -12,7 +12,7 @@
             </h2>
             <p class="text-blue-100 mt-1">Update task details</p>
         </div>
-        
+
         <!-- Loading State -->
         @if(loading) {
             <div class="flex items-center justify-center p-12">
@@ -22,7 +22,7 @@
                 </div>
             </div>
         }
-        
+
         <!-- Error State -->
         @else if(error) {
             <div class="p-6">
@@ -40,19 +40,22 @@
                 </div>
             </div>
         }
-        
+
         <!-- Form -->
         @else {
             <div class="p-6">
                 <form [formGroup]="taskForm" (ngSubmit)="updateTask()" class="space-y-6">
+
                     <!-- Title -->
                     <div>
-                        <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Task Title <span class="text-red-500">*</span></label>
+                        <label for="title" class="block text-sm font-medium text-gray-700 mb-1">
+                            Task Title <span class="text-red-500">*</span>
+                        </label>
                         <input 
-                            type="text" 
+                            type="text"
                             id="title"
-                            formControlName="title" 
-                            placeholder="Enter a descriptive title" 
+                            formControlName="title"
+                            placeholder="Enter a descriptive title"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
                         @if (taskForm.get('title')?.invalid && (taskForm.get('title')?.touched || taskForm.get('title')?.dirty)) {
@@ -66,15 +69,17 @@
                             </div>
                         }
                     </div>
-                    
+
                     <!-- Description -->
                     <div>
-                        <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description <span class="text-red-500">*</span></label>
-                        <textarea 
+                        <label for="description" class="block text-sm font-medium text-gray-700 mb-1">
+                            Description <span class="text-red-500">*</span>
+                        </label>
+                        <textarea
                             id="description"
-                            formControlName="description" 
-                            rows="4" 
-                            placeholder="Provide a detailed description of the task" 
+                            formControlName="description"
+                            rows="4"
+                            placeholder="Provide a detailed description of the task"
                             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         ></textarea>
                         @if (taskForm.get('description')?.invalid && (taskForm.get('description')?.touched || taskForm.get('description')?.dirty)) {
@@ -88,41 +93,70 @@
                             </div>
                         }
                     </div>
-                    
+
+                    <!-- Start Date -->
+                    <div>
+                        <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">
+                            Start Date
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="far fa-calendar-alt text-gray-400"></i>
+                            </div>
+                            <input
+                                type="datetime-local"
+                                id="startDate"
+                                formControlName="startDate"
+                                [min]="minDateTime"
+                                class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
                         <!-- Deadline -->
                         <div>
-                            <label for="deadline" class="block text-sm font-medium text-gray-700 mb-1">Deadline <span class="text-red-500">*</span></label>
+                            <label for="deadline" class="block text-sm font-medium text-gray-700 mb-1">
+                                Deadline <span class="text-red-500">*</span>
+                            </label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <i class="far fa-calendar-alt text-gray-400"></i>
                                 </div>
-                                <input 
-                                    type="date" 
+                                <input
+                                    type="datetime-local"
                                     id="deadline"
-                                    formControlName="deadline" 
+                                    formControlName="deadline"
+                                    [min]="minDateTime"
                                     class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 >
                             </div>
-                            @if (taskForm.get('deadline')?.invalid && (taskForm.get('deadline')?.touched || taskForm.get('deadline')?.dirty)) {
-                                <div class="mt-1 text-sm text-red-600">
-                                    @if (taskForm.get('deadline')?.errors?.['required']) {
-                                        <p><i class="fas fa-info-circle mr-1"></i>Deadline is required</p>
-                                    }
-                                </div>
-                            }
+
+                            <div class="mt-1 text-sm text-red-600">
+                                @if (taskForm.get('deadline')?.errors?.['required'] && (taskForm.get('deadline')?.touched || taskForm.get('deadline')?.dirty)) {
+                                    <p><i class="fas fa-info-circle mr-1"></i>Deadline is required</p>
+                                }
+
+                                @if (taskForm.errors?.['deadlineBeforeStart'] && 
+                                    (taskForm.get('deadline')?.touched || taskForm.get('startDate')?.touched)) {
+                                    <p><i class="fas fa-info-circle mr-1"></i>Deadline must be after start date</p>
+                                }
+                            </div>
                         </div>
-                        
+
                         <!-- Priority -->
                         <div>
-                            <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Priority <span class="text-red-500">*</span></label>
+                            <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">
+                                Priority <span class="text-red-500">*</span>
+                            </label>
                             <div class="relative">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <i class="fas fa-flag text-gray-400"></i>
                                 </div>
-                                <select 
+                                <select
                                     id="priority"
-                                    formControlName="priority" 
+                                    formControlName="priority"
                                     class="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
                                 >
                                     <option value="" disabled>Select priority</option>
@@ -136,19 +170,18 @@
                             </div>
                             @if (taskForm.get('priority')?.invalid && (taskForm.get('priority')?.touched || taskForm.get('priority')?.dirty)) {
                                 <div class="mt-1 text-sm text-red-600">
-                                    @if (taskForm.get('priority')?.errors?.['required']) {
-                                        <p><i class="fas fa-info-circle mr-1"></i>Priority is required</p>
-                                    }
+                                    <p><i class="fas fa-info-circle mr-1"></i>Priority is required</p>
                                 </div>
                             }
                         </div>
+
                     </div>
-                    
-                    
+
+                    <!-- Submit -->
                     <div class="pt-4">
-                        <button 
-                            type="submit" 
-                            class="w-full flex justify-center items-center px-4 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors" 
+                        <button
+                            type="submit"
+                            class="w-full flex justify-center items-center px-4 py-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                             [disabled]="taskForm.invalid || loading"
                             [ngClass]="{'opacity-50 cursor-not-allowed': taskForm.invalid || loading}"
                         >
@@ -156,6 +189,7 @@
                             <span class="ml-2">{{ loading ? 'Updating...' : 'Update Task' }}</span>
                         </button>
                     </div>
+
                 </form>
             </div>
         }

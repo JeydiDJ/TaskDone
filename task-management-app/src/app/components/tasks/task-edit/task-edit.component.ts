@@ -18,6 +18,7 @@ export class TaskEditComponent implements OnInit {
   loading = false;
   error: string | null = null;
   minDate: string = new Date().toISOString().split('T')[0];
+  minDateTime: string = new Date().toISOString().slice(0, 16);
   users: User[] = [];
   isloading = { set: (value: boolean) => { this.loading = value; } };
   iserror: string | null = null;
@@ -30,13 +31,17 @@ export class TaskEditComponent implements OnInit {
   usersService = inject(UsersService);
 
   constructor() {
-    this.taskForm = this.fb.group({
-      title: ['', [Validators.required, Validators.minLength(3)]],
-      description: ['', [Validators.required, Validators.minLength(3)]],
-      deadline: ['', Validators.required],
-      priority: ['', Validators.required],
-      userId: ['', Validators.required],
-    });
+    this.taskForm = this.fb.group(
+  {
+    title: ['', [Validators.required, Validators.minLength(3)]],
+    description: ['', [Validators.required, Validators.minLength(3)]],
+    startDate: [''], 
+    deadline: ['', Validators.required],
+    priority: ['', Validators.required],
+    userId: ['', Validators.required],
+  },
+  { validators: this.deadlineAfterStartValidator }
+);
   }
 
   ngOnInit() {
@@ -50,7 +55,13 @@ export class TaskEditComponent implements OnInit {
         this.taskForm.patchValue({
           title: task.title,
           description: task.description,
-          deadline: new Date(task.deadline).toISOString().split('T')[0],
+          startDate: task.startDate
+          ? new Date(task.startDate).toISOString().slice(0, 16)
+          : '',
+
+          deadline: task.deadline
+            ? new Date(task.deadline).toISOString().slice(0, 16)
+            : '',
           priority: task.priority,
           userId: task.user._id,
         });
@@ -80,6 +91,19 @@ export class TaskEditComponent implements OnInit {
     });
   }
 
+  deadlineAfterStartValidator(group: FormGroup) {
+  const start = group.get('startDate')?.value;
+  const deadline = group.get('deadline')?.value;
+
+  if (start && deadline) {
+    if (new Date(deadline) <= new Date(start)) {
+      return { deadlineBeforeStart: true };
+    }
+  }
+
+  return null;
+}
+
   updateTask() {
     if (this.taskForm.invalid) {
       return;
@@ -88,6 +112,7 @@ export class TaskEditComponent implements OnInit {
     const updatedTask = {
       title: this.taskForm.value.title,
       description: this.taskForm.value.description,
+      startDate: this.taskForm.value.startDate,
       deadline: this.taskForm.value.deadline,
       priority: this.taskForm.value.priority,
       userId: this.taskForm.value.userId,
