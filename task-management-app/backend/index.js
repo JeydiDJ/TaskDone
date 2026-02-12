@@ -1,5 +1,3 @@
-
-
 require("dotenv").config();
 
 const express = require('express');
@@ -13,23 +11,29 @@ const { startReminderScheduler } = require('./utils/reminderScheduler');
 // Initialize Express app
 const app = express();
 
-// Connect to MongoDB and start server
+// Connect to MongoDB
 (async () => {
     await connectDB();
 
-    // Middleware
-    app.use(cors({ origin: "*" }));
+    // CORS: allow local dev + Vercel frontend
+    const allowedOrigins = [
+      'http://localhost:4200',
+      'https://task-done-g10.vercel.app'
+    ];
+    app.use(cors({
+      origin: allowedOrigins,
+      credentials: true
+    }));
+
+    // Body parser
     app.use(express.json());
 
-    // Swagger documentation options
+    // Swagger docs
     const swaggerOptions = {
-      customCss: '.swagger-ui .topbar { background-color: #24292e; } .swagger-ui .topbar .download-url-wrapper .select-label select { border: 2px solid #4caf50; } .swagger-ui .info .title { color: #333; } .swagger-ui .scheme-container { background-color: #f5f5f5; }',
+      customCss: '.swagger-ui .topbar { background-color: #24292e; }',
       customSiteTitle: 'Task Management API Documentation',
-      customfavIcon: '/favicon.ico',
       explorer: true,
     };
-
-    // Swagger documentation route
     app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec, swaggerOptions));
 
     // Routes
@@ -41,17 +45,12 @@ const app = express();
         res.send('API is running... <br><a href="/api-docs">View API Documentation</a>');
     });
 
-    // Initialize scheduled task cleanup
+    // Scheduled tasks
     scheduleTaskCleanup();
-
-    // Start reminder scheduler
     startReminderScheduler();
 
-    // Start server
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
-        console.log(`API Documentation available at http://localhost:${PORT}/api-docs`);
     });
 })();
-
