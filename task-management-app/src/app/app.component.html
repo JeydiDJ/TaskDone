@@ -1,7 +1,13 @@
-<div class="grid grid-rows-layout min-h-screen">
-    <app-navbar></app-navbar>
-    <div class="flex-grow w-full px-4 sm:px-6 lg:px-8 pt-16 md:pt-16">
-        <router-outlet></router-outlet>
-    </div>
-    <app-footer class="w-full mt-auto"></app-footer>
+<!-- Splash Screen -->
+<app-splash *ngIf="showSplash" (finished)="hideSplash()"></app-splash>
+
+<!-- Main Layout -->
+<div *ngIf="!showSplash" class="grid grid-rows-layout min-h-screen">
+  <app-navbar></app-navbar>
+
+  <div class="flex-grow w-full px-4 sm:px-6 lg:px-8 pt-16 md:pt-16">
+    <router-outlet></router-outlet>
+  </div>
+
+  <app-footer class="w-full mt-auto"></app-footer>
 </div>

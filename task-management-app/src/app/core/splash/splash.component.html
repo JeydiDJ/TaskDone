@@ -1,0 +1,13 @@
+<div class="splash-container">
+  <video
+    #videoPlayer
+    muted
+    playsinline
+    preload="auto"
+    class="splash-video"
+    (ended)="onVideoEnd()"
+    (error)="onVideoError()"
+  >
+    <source src="assets/taskdone-animated-logo.mp4" type="video/mp4" />
+  </video>
+</div>

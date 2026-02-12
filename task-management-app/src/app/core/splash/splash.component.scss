@@ -1,0 +1,15 @@
+.splash-container {
+  position: fixed;
+  inset: 0;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.splash-video {
+  width: 600px;   
+  height: auto;   
+  display: block;
+}
