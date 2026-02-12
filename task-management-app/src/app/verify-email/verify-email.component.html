@@ -1,0 +1,31 @@
+<div class="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
+  <div class="bg-white shadow-md rounded-lg p-8 w-full max-w-md text-center">
+    <h2 class="text-2xl font-semibold mb-4">Email Verification</h2>
+
+    <!-- Loading State -->
+    <div *ngIf="loading()" class="text-gray-500">
+      <p>Verifying your email...</p>
+    </div>
+
+    <!-- Result -->
+    <div *ngIf="!loading()">
+      <p [ngClass]="success() ? 'text-green-600' : 'text-red-600'" class="mb-6 font-medium">
+        {{ message() }}
+      </p>
+
+      <!-- Success: show Go to Login button -->
+      <button
+        *ngIf="success()"
+        (click)="goToLogin()"
+        class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition"
+      >
+        Go to Login
+      </button>
+
+      <!-- Optional: Error info -->
+      <p *ngIf="!success()" class="text-sm text-gray-600 mt-2">
+        Please check your verification link or contact support.
+      </p>
+    </div>
+  </div>
+</div>

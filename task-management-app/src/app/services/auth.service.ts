@@ -21,14 +21,16 @@ export class AuthService {
     this.router.navigate(['/tasks']);
   }
 
+  /**
+   * REGISTER: no token handling, just returns backend response
+   */
   register(user: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/register`, user).pipe(
-      tap((response: any) => {
-        this.handleAuthentication(response.token, response.expiresIn);
-      })
-    );
+    return this.http.post(`${this.apiUrl}/register`, user);
   }
 
+  /**
+   * LOGIN: handles token normally
+   */
   login(user: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, user).pipe(
       tap((response: any) => {
@@ -56,6 +58,7 @@ export class AuthService {
     if (this.tokenExpirationTimer) {
       clearTimeout(this.tokenExpirationTimer);
     }
+    // Optional: redirect to login
     // this.router.navigate(['/login']);
   }
 
@@ -69,6 +72,9 @@ export class AuthService {
     });
   }
 
+  /**
+   * PRIVATE: handle token storage after login only
+   */
   private handleAuthentication(token: string, expiresIn: number) {
     const user = { token, expiresIn };
     const expirationDate = new Date(new Date().getTime() + expiresIn * 1000);
@@ -80,13 +86,14 @@ export class AuthService {
 
   autoLogin() {
     const token = this.getToken();
-    const expirationDate = new Date(
-      sessionStorage.getItem('tokenExpirationDate') || ''
-    );
-    if (!token || expirationDate <= new Date()) {
+    const expirationDateStr = sessionStorage.getItem('tokenExpirationDate');
+    const expirationDate = expirationDateStr ? new Date(expirationDateStr) : null;
+
+    if (!token || !expirationDate || expirationDate <= new Date()) {
       this.logout();
       return;
     }
+
     const expiresIn = expirationDate.getTime() - new Date().getTime();
     this.autoLogout(expiresIn);
   }
@@ -112,13 +119,11 @@ export class AuthService {
   }
 
   getCurrentUser(): any {
-    // Get user data from sessionStorage instead of localStorage
     const userData = sessionStorage.getItem('user');
     return userData ? JSON.parse(userData) : null;
   }
 
   saveUserData(user: any): void {
-    // Save to sessionStorage instead of localStorage to match retrieval
     sessionStorage.setItem('user', JSON.stringify(user));
   }
 }

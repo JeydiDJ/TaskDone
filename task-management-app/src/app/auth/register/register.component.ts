@@ -8,18 +8,19 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { NgClass } from '@angular/common';
+import { NgClass, CommonModule } from '@angular/common';
 
 @Component({
-    selector: 'app-register',
-    imports: [ReactiveFormsModule, RouterLink, NgClass],
-    templateUrl: './register.component.html',
+  selector: 'app-register',
+  standalone: true,
+  imports: [ReactiveFormsModule, RouterLink, NgClass, CommonModule],
+  templateUrl: './register.component.html',
 })
 export class RegisterComponent {
   registerForm: FormGroup;
   error = signal<string>('');
+  successMessage = signal<string>(''); // NEW: store success message
   showPassword = signal<boolean>(false);
-
 
   authService = inject(AuthService);
   router = inject(Router);
@@ -36,18 +37,14 @@ export class RegisterComponent {
     });
   }
 
-
-
   togglePasswordVisibility(): void {
     this.showPassword.update((state) => !state);
   }
 
-
-
   onSubmit() {
     if (this.registerForm.invalid) {
       // Mark all fields as touched to trigger validation messages
-      Object.keys(this.registerForm.controls).forEach(key => {
+      Object.keys(this.registerForm.controls).forEach((key) => {
         const control = this.registerForm.get(key);
         control?.markAsTouched();
       });
@@ -56,16 +53,22 @@ export class RegisterComponent {
 
     const data = {
       email: this.registerForm.value.email,
-      password: this.registerForm.value.password
+      password: this.registerForm.value.password,
     };
 
     this.authService.register(data).subscribe({
-      next: () => {
-        this.router.navigate(['/tasks']);
+      next: (res: any) => {
+        // Instead of navigating, show success message
+        this.successMessage.set(
+          'Registration successful! Please check your email to verify your account.'
+        );
+        this.error.set('');
+        this.registerForm.reset();
       },
       error: (err) => {
         console.error(err);
         this.error.set(err?.error?.message || 'An error occurred');
+        this.successMessage.set('');
       },
     });
   }
