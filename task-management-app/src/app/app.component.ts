@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, HostListener } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { FooterComponent } from './shared/footer/footer.component';
 import { NavbarComponent } from './shared/navbar/navbar.component';
@@ -20,6 +20,21 @@ export class AppComponent implements OnInit {
 
   showSplash = true;
 
+  // --- PWA Install banner ---
+  deferredPrompt: any;
+  showInstallButton = false;
+
+  @HostListener('window:beforeinstallprompt', ['$event'])
+  onBeforeInstallPrompt(event: Event) {
+    event.preventDefault(); // prevent Chrome's default mini-prompt
+    this.deferredPrompt = event;
+
+    // Only show banner if user hasn't dismissed before
+    if (!localStorage.getItem('pwaDismissed')) {
+      this.showInstallButton = true;
+    }
+  }
+
   constructor() {
     this.meta.addTags([
       { name: 'description', content: 'An Angular task management app' },
@@ -38,12 +53,11 @@ export class AppComponent implements OnInit {
   ngOnInit() {
     this.authService.autoLogin();
 
-    // Only show splash once per session
+    // Splash logic
     const splashPlayed = sessionStorage.getItem('splashPlayed');
     if (splashPlayed === 'true') {
       this.showSplash = false;
     } else {
-      // hide splash after max 3s if video fails or autoplay blocked
       setTimeout(() => this.hideSplash(), 3000);
     }
   }
@@ -53,5 +67,25 @@ export class AppComponent implements OnInit {
     console.log('Splash finished');
     this.showSplash = false;
     sessionStorage.setItem('splashPlayed', 'true');
+  }
+
+  // --- PWA Install methods ---
+  installApp() {
+    if (!this.deferredPrompt) return;
+    this.deferredPrompt.prompt();
+    this.deferredPrompt.userChoice.then((choiceResult: any) => {
+      if (choiceResult.outcome === 'accepted') {
+        console.log('User accepted the PWA install');
+      } else {
+        console.log('User dismissed the PWA install');
+      }
+      this.deferredPrompt = null;
+      this.showInstallButton = false;
+    });
+  }
+
+  dismissBanner() {
+    this.showInstallButton = false;
+    localStorage.setItem('pwaDismissed', 'true'); // remember dismissal
   }
 }
