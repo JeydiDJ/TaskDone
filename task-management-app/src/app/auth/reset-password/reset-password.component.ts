@@ -7,11 +7,11 @@ import {
 } from '@angular/forms';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { NgClass } from '@angular/common';
+import { NgClass, NgIf, CommonModule } from '@angular/common';
 
 @Component({
     selector: 'app-reset-password',
-    imports: [ReactiveFormsModule, RouterLink, NgClass],
+    imports: [ReactiveFormsModule, RouterLink, NgClass, NgIf, CommonModule],
     templateUrl: './reset-password.component.html',
 })
 export class ResetPasswordComponent implements OnInit {

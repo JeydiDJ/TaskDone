@@ -1,15 +1,19 @@
+// Add these at the top (already present)
 const bcrypt = require("bcryptjs");
 const User = require("../models/user.model");
 const { generateToken } = require("../utils/response");
 const crypto = require("crypto");
 const SibApiV3Sdk = require("sib-api-v3-sdk");
 
+// Brevo setup
 const client = SibApiV3Sdk.ApiClient.instance;
 const apiKey = client.authentications['api-key'];
 apiKey.apiKey = process.env.BREVO_API_KEY;
-
 const brevo = new SibApiV3Sdk.TransactionalEmailsApi();
 
+// ======================
+// Registration
+// ======================
 exports.register = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -27,7 +31,7 @@ exports.register = async (req, res) => {
       password: hashedPassword,
       emailVerificationToken: verificationToken,
       emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
-      emailPending: true // optional field to track email status
+      emailPending: true
     });
 
     await newUser.save();
@@ -36,8 +40,7 @@ exports.register = async (req, res) => {
     const verificationURL = `${clientUrl}/verify-email/${verificationToken}`;
 
     try {
-      // Send verification email via Brevo API
-      await brevo.sendTransacEmail({
+      const response = await brevo.sendTransacEmail({
         sender: { name: 'TaskDone', email: process.env.EMAIL_SENDER },
         to: [{ email: newUser.email }],
         subject: 'Verify Your Email - TaskDone',
@@ -49,16 +52,14 @@ exports.register = async (req, res) => {
         `,
       });
 
-      // Mark email as sent
+      console.log("Brevo email sent:", response);
       newUser.emailPending = false;
       await newUser.save();
 
     } catch (emailError) {
       console.error("Brevo email failed:", emailError);
-      // Optional: delete the user if email fails
+      // Optional: delete user or leave emailPending = true
       await User.findByIdAndDelete(newUser._id);
-
-      // Or leave user with emailPending = true to retry later
     }
 
     res.status(201).json({
@@ -72,24 +73,22 @@ exports.register = async (req, res) => {
   }
 };
 
-
-
-// Verify email
+// ======================
+// Verify Email
+// ======================
 exports.verifyEmail = async (req, res) => {
   try {
     const { token } = req.params;
 
-    // Find user with matching verification token and check if not expired
     const user = await User.findOne({
       emailVerificationToken: token,
-      emailVerificationExpires: { $gt: Date.now() } // token not expired
+      emailVerificationExpires: { $gt: Date.now() }
     });
 
     if (!user) {
       return res.status(400).json({ message: 'Invalid or expired verification token.' });
     }
 
-    // Mark user as verified
     user.isVerified = true;
     user.emailVerificationToken = undefined;
     user.emailVerificationExpires = undefined;
@@ -102,38 +101,27 @@ exports.verifyEmail = async (req, res) => {
   }
 };
 
-
-// User login
+// ======================
+// Login
+// ======================
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     const isValidPassword = await bcrypt.compare(password, user.password);
-    if (!isValidPassword) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
+    if (!isValidPassword) return res.status(401).json({ message: "Invalid credentials" });
 
-    // NEW: Block login if email not verified
     if (!user.isVerified) {
-      return res.status(401).json({
-        message: "Please verify your email before logging in."
-      });
+      return res.status(401).json({ message: "Please verify your email before logging in." });
     }
 
     const token = generateToken(user);
-
     res.status(200).json({
       token,
       expiresIn: 3600,
-      user: {
-        _id: user._id,
-        email: user.email,
-        role: user.role
-      },
+      user: { _id: user._id, email: user.email, role: user.role },
       success: true,
       message: 'Login successful'
     });
@@ -142,13 +130,16 @@ exports.login = async (req, res) => {
   }
 };
 
-
-// User logout
+// ======================
+// Logout
+// ======================
 exports.logout = (req, res) => {
   res.status(200).json({ message: "User logged out" });
 };
 
-// Get all users
+// ======================
+// Get All Users
+// ======================
 exports.getUsers = async (req, res) => {
   try {
     const users = await User.find();
@@ -158,20 +149,75 @@ exports.getUsers = async (req, res) => {
   }
 };
 
-// Forgot password
+// ======================
+// Forgot Password
+// ======================
 exports.forgotPassword = async (req, res) => {
   try {
-    // Implementation...
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+    await user.save();
+
+    const clientUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+    const resetURL = `${clientUrl}/reset-password/${resetToken}`;
+
+    try {
+      const response = await brevo.sendTransacEmail({
+        sender: { name: 'TaskDone', email: process.env.EMAIL_SENDER },
+        to: [{ email: user.email }],
+        subject: 'Reset Your Password - TaskDone',
+        htmlContent: `
+          <p>Hi,</p>
+          <p>You requested a password reset. Click below to reset:</p>
+          <a href="${resetURL}">Reset Password</a>
+          <p>This link expires in 1 hour.</p>
+          <p>If you didn't request this, ignore this email.</p>
+        `,
+      });
+
+      console.log("Brevo reset email sent:", response);
+    } catch (emailError) {
+      console.error("Brevo forgot password email failed:", emailError);
+      return res.status(500).json({ message: "Failed to send reset email. Try again later." });
+    }
+
+    res.status(200).json({ message: "Password reset email sent successfully." });
   } catch (error) {
-    // Error handling...
+    console.error("Forgot password error:", error);
+    res.status(500).json({ message: error.message });
   }
 };
 
-// Reset password
+// ======================
+// Reset Password
+// ======================
 exports.resetPassword = async (req, res) => {
   try {
-    // Implementation...
+    const { token } = req.params;
+    const { password } = req.body;
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) return res.status(400).json({ message: "Invalid or expired reset token." });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    await user.save();
+
+    res.status(200).json({ message: "Password has been reset successfully!" });
   } catch (error) {
-    // Error handling...
+    console.error("Reset password error:", error);
+    res.status(500).json({ message: error.message });
   }
 };
