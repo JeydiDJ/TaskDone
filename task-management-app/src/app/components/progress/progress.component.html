@@ -1,9 +1,14 @@
 <div class="container mx-auto px-4 py-8">
-  <div class="max-w-4xl mx-auto">
-    <h1 class="text-3xl font-bold text-gray-800 mb-8">My Progress</h1>
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl font-bold text-gray-800 mb-8">
+      My Progress
+    </h1>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Placeholder for progress statistics -->
+    <!-- ============================= -->
+    <!-- STAT CARDS -->
+    <!-- ============================= -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- Completed -->
       <div class="card">
         <div class="flex items-center space-x-4">
           <div class="p-3 rounded-lg bg-green-100">
@@ -16,6 +21,7 @@
         </div>
       </div>
 
+      <!-- Pending -->
       <div class="card">
         <div class="flex items-center space-x-4">
           <div class="p-3 rounded-lg bg-yellow-100">
@@ -28,6 +34,20 @@
         </div>
       </div>
 
+      <!-- Overdue -->
+      <div class="card">
+        <div class="flex items-center space-x-4">
+          <div class="p-3 rounded-lg bg-red-100">
+            <i class="fas fa-exclamation-circle text-red-600 text-2xl"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800">Overdue Tasks</h3>
+            <p class="text-2xl font-bold text-red-600">{{ overdueTasks }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Overall Progress -->
       <div class="card">
         <div class="flex items-center space-x-4">
           <div class="p-3 rounded-lg bg-blue-100">
@@ -41,33 +61,40 @@
       </div>
     </div>
 
-   <!-- Progress Overview -->
-<div class="card mt-8">
-  <h2 class="text-xl font-semibold text-gray-800 mb-4">
-    Progress Overview
-  </h2>
+    <!-- ============================= -->
+    <!-- PROGRESS OVERVIEW (PIE CHART) -->
+    <!-- ============================= -->
+    <div class="card mt-8 p-4">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Progress Overview</h2>
 
-  <div *ngIf="totalTasks === 0" class="text-center text-gray-500 py-10">
-    <i class="fas fa-clipboard-list text-4xl mb-4"></i>
-    <p>No tasks yet. Start adding tasks to see your progress!</p>
-  </div>
+      <div *ngIf="totalTasks === 0" class="text-center text-gray-500 py-10">
+        <i class="fas fa-clipboard-list text-4xl mb-4"></i>
+        <p>No tasks yet. Start adding tasks to see your progress!</p>
+      </div>
 
-  <!-- DO NOT USE *ngIf HERE -->
-  <div class="max-w-md mx-auto">
-    <canvas #progressCanvas style="height:300px;"></canvas>
-  </div>
-</div>
-
-<!-- Monthly Chart -->
-<div class="card mt-8">
-  <h2 class="text-xl font-semibold text-gray-800 mb-4">
-    Monthly Performance
-  </h2>
-
-  <div class="max-w-3xl mx-auto">
-    <canvas #monthlyCanvas style="height:300px;"></canvas>
+   <div class="w-full mx-auto">
+  <div class="w-full 
+              aspect-[4/3] sm:aspect-[4/3] md:aspect-[4/3] lg:aspect-[16/9] 
+              max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl mx-auto">
+    <canvas #progressCanvas class="w-full h-full"></canvas>
   </div>
 </div>
 
+
+    </div>
+
+    <!-- ============================= -->
+    <!-- MONTHLY BAR CHART -->
+    <!-- ============================= -->
+    <div class="card mt-8 p-4">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Monthly Performance</h2>
+
+      <div class="w-full mx-auto">
+        <div class="w-full aspect-[16/9] sm:aspect-[4/3] md:aspect-[16/9] lg:aspect-[16/9] max-w-3xl mx-auto">
+          <canvas #monthlyCanvas class="w-full h-full"></canvas>
+        </div>
+      </div>
+    </div>
+    
   </div>
 </div>

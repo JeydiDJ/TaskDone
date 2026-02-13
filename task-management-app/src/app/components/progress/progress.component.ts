@@ -4,6 +4,8 @@ import {
   OnInit,
   ViewChild,
   ElementRef,
+  AfterViewInit,
+  OnDestroy,
 } from '@angular/core';
 import { TaskService } from '../../services/task.service';
 import { Chart, registerables } from 'chart.js';
@@ -21,7 +23,7 @@ interface CompletedTask {
   imports: [NgIf],
   templateUrl: './progress.component.html',
 })
-export class ProgressComponent implements OnInit {
+export class ProgressComponent implements OnInit, AfterViewInit, OnDestroy {
   private taskService = inject(TaskService);
 
   @ViewChild('progressCanvas') progressCanvas!: ElementRef<HTMLCanvasElement>;
@@ -29,14 +31,31 @@ export class ProgressComponent implements OnInit {
 
   completedTasks = 0;
   pendingTasks = 0;
+  overdueTasks = 0;
   overallProgress = 0;
   totalTasks = 0;
 
   pieChart!: Chart;
   barChart!: Chart;
 
+  // Store resize listener reference to remove it later
+  private resizeListener = () => {
+    if (this.pieChart) this.pieChart.resize();
+    if (this.barChart) this.barChart.resize();
+  };
+
   ngOnInit(): void {
     this.loadProgressStats();
+  }
+
+  ngAfterViewInit(): void {
+    // Listen for window resize to automatically resize charts
+    window.addEventListener('resize', this.resizeListener);
+  }
+
+  ngOnDestroy(): void {
+    // Clean up listener when component is destroyed
+    window.removeEventListener('resize', this.resizeListener);
   }
 
   loadProgressStats(): void {
@@ -45,23 +64,21 @@ export class ProgressComponent implements OnInit {
         // Main stats
         this.completedTasks = response.data.completedTasks;
         this.pendingTasks = response.data.pendingTasks;
+        this.overdueTasks = response.data.overdueTasks;
         this.overallProgress = response.data.overallProgress;
-        this.totalTasks = this.completedTasks + this.pendingTasks;
 
-        // Only create charts if there are tasks
+        // Total tasks
+        this.totalTasks =
+          this.completedTasks +
+          this.pendingTasks +
+          this.overdueTasks;
+
         if (this.totalTasks > 0) {
-          // -------------------
-          // PIE CHART
-          // -------------------
-          if (this.progressCanvas && !this.pieChart) {
-            this.createPieChart();
-          } else {
-            this.updatePieChart();
-          }
+          // Pie chart
+          if (!this.pieChart) this.createPieChart();
+          else this.updatePieChart();
 
-          // -------------------
-          // BAR CHART
-          // -------------------
+          // Bar chart
           const tasks: CompletedTask[] = response.data.tasks || [];
           const now = new Date();
           const months: string[] = [];
@@ -82,13 +99,12 @@ export class ProgressComponent implements OnInit {
             monthlyCounts.push(count);
           }
 
-          if (this.monthlyCanvas && !this.barChart) {
-            this.createBarChart();
-          }
+          if (!this.barChart) this.createBarChart();
           this.updateBarChart(months, monthlyCounts);
         }
       },
-      error: (error) => console.error('Error loading progress stats:', error),
+      error: (error) =>
+        console.error('Error loading progress stats:', error),
     });
   }
 
@@ -101,46 +117,32 @@ export class ProgressComponent implements OnInit {
     this.pieChart = new Chart(this.progressCanvas.nativeElement, {
       type: 'doughnut',
       data: {
-        labels: ['Completed', 'Pending'],
+        labels: ['Completed', 'Pending', 'Overdue'],
         datasets: [
           {
-            data: [this.completedTasks, this.pendingTasks],
-            backgroundColor: ['#16a34a', '#facc15'],
+            data: [this.completedTasks, this.pendingTasks, this.overdueTasks],
+            backgroundColor: ['#16a34a', '#facc15', '#ef4444'],
             borderWidth: 0,
           },
         ],
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false, // important for responsive container
         cutout: '65%',
         animation: { duration: 1000 },
         plugins: { legend: { position: 'bottom' } },
       },
-      plugins: [
-        {
-          id: 'centerText',
-          beforeDraw: (chart) => {
-            const { width, height } = chart;
-            const ctx = chart.ctx;
-            ctx.save();
-            ctx.font = 'bold 22px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillStyle = '#1f2937';
-            ctx.fillText(`${this.overallProgress}%`, width / 2, height / 2);
-            ctx.restore();
-          },
-        },
-      ],
+     
     });
   }
 
   updatePieChart() {
     if (!this.pieChart) return;
-
     this.pieChart.data.datasets[0].data = [
       this.completedTasks,
       this.pendingTasks,
+      this.overdueTasks,
     ];
     this.pieChart.update();
   }
@@ -166,6 +168,7 @@ export class ProgressComponent implements OnInit {
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false, // important for responsive container
         animation: { duration: 1000 },
         plugins: { legend: { display: false } },
         scales: { y: { beginAtZero: true } },
@@ -175,7 +178,6 @@ export class ProgressComponent implements OnInit {
 
   updateBarChart(labels: string[], data: number[]) {
     if (!this.barChart) return;
-
     this.barChart.data.labels = labels;
     this.barChart.data.datasets[0].data = data;
     this.barChart.update();

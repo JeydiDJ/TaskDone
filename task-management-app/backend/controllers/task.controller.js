@@ -275,43 +275,52 @@ exports.deleteTask = async (req, res) => {
 exports.getProgressStats = async (req, res) => {
   try {
     const userId = req.user._id;
+    const now = new Date();
 
     const completedTasks = await Task.countDocuments({
       user: userId,
       completed: true
     });
 
-    const ongoingTasks = await Task.countDocuments({
+    const pendingTasks = await Task.countDocuments({
       user: userId,
       completed: false,
-      deadline: { $gte: new Date() }
+      deadline: { $gte: now }
     });
 
-    const unfinishedTasks = await Task.countDocuments({
+    const overdueTasks = await Task.countDocuments({
       user: userId,
       completed: false,
-      deadline: { $lt: new Date() }
+      deadline: { $lt: now }
     });
 
-    const pendingTasks = ongoingTasks + unfinishedTasks;
+    const totalTasks = completedTasks + pendingTasks + overdueTasks;
 
-    const totalTasks = completedTasks + pendingTasks;
-    const overallProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    const overallProgress =
+      totalTasks > 0
+        ? Math.round((completedTasks / totalTasks) * 100)
+        : 0;
 
-    // Get completed tasks with completedAt for bar chart
-    const tasks = await Task.find({ user: userId, completed: true })
-                            .select('completedAt -_id')
-                            .lean();
+    // For monthly bar chart
+    const tasks = await Task.find({
+      user: userId,
+      completed: true
+    })
+      .select('completedAt -_id')
+      .lean();
 
     successResponse(res, 200, "Progress statistics retrieved successfully", {
       completedTasks,
       pendingTasks,
+      overdueTasks, // 👈 ADD THIS
       overallProgress,
       tasks
     });
+
   } catch (error) {
     console.error('Error getting progress stats:', error);
-    errorResponse(res, 500, "An error occurred while retrieving progress statistics. Please try again.");
+    errorResponse(res, 500, "An error occurred while retrieving progress statistics.");
   }
 };
+
 
