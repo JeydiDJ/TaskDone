@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common'; // needed for *ngIf and [ngClass]
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-verify-email',
@@ -31,8 +32,8 @@ export class VerifyEmailComponent implements OnInit {
     return;
   }
 
-  // Use full backend URL
-  const backendUrl = `${window.location.origin.replace(/4200/, '3000')}/api/auth/verify-email/${token}`;
+  // Use environment.apiUrl like the rest of the app
+  const backendUrl = `${environment.apiUrl}/auth/verify-email/${token}`;
 
   this.http.get<{ message: string }>(backendUrl)
     .subscribe({

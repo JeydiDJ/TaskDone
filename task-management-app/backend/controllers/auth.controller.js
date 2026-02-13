@@ -36,7 +36,9 @@ exports.register = async (req, res) => {
       }
     });
 
-    const clientUrl = process.env.APP_URL || 'http://localhost:4200';
+    // Use FRONTEND_URL env var, fallback to APP_URL, then localhost
+    // In production, set FRONTEND_URL to your actual frontend URL (e.g., https://yourapp.com)
+    const clientUrl = process.env.FRONTEND_URL || process.env.APP_URL || 'http://localhost:4200';
     const verificationURL = `${clientUrl}/verify-email/${verificationToken}`;
 
     await transporter.sendMail({
