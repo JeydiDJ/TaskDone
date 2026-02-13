@@ -1,61 +1,69 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/user.model");
-const { generateToken, successResponse, errorResponse } = require("../utils/response");
+const { generateToken } = require("../utils/response");
 const crypto = require("crypto");
-const nodemailer = require("nodemailer");
+const SibApiV3Sdk = require("sib-api-v3-sdk");
 
-// Register a new user
+const client = SibApiV3Sdk.ApiClient.instance;
+const apiKey = client.authentications['api-key'];
+apiKey.apiKey = process.env.BREVO_API_KEY;
+
+const brevo = new SibApiV3Sdk.TransactionalEmailsApi();
+
 exports.register = async (req, res) => {
   try {
     const { email, password } = req.body;
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Generate email verification token
     const verificationToken = crypto.randomBytes(32).toString("hex");
 
     const newUser = new User({
       email,
       password: hashedPassword,
       emailVerificationToken: verificationToken,
-      emailVerificationExpires: Date.now() + 24*60*60*1000 // 24 hours
+      emailVerificationExpires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+      emailPending: true // optional field to track email status
     });
 
     await newUser.save();
 
-    // Send verification email
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
-
-    // Use FRONTEND_URL env var, fallback to APP_URL, then localhost
-    // In production, set FRONTEND_URL to your actual frontend URL (e.g., https://yourapp.com)
-    const clientUrl = process.env.FRONTEND_URL || process.env.APP_URL || 'http://localhost:4200';
+    const clientUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
     const verificationURL = `${clientUrl}/verify-email/${verificationToken}`;
 
-    await transporter.sendMail({
-      from: `"TaskDone" <${process.env.EMAIL_USER}>`,
-      to: newUser.email,
-      subject: "Verify Your Email - TaskDone",
-      html: `
-        <p>Hi,</p>
-        <p>Please verify your email by clicking the link below:</p>
-        <a href="${verificationURL}">Verify Email</a>
-        <p>This link expires in 24 hours.</p>
-      `
-    });
+    try {
+      // Send verification email via Brevo API
+      await brevo.sendTransacEmail({
+        sender: { name: 'TaskDone', email: process.env.EMAIL_SENDER },
+        to: [{ email: newUser.email }],
+        subject: 'Verify Your Email - TaskDone',
+        htmlContent: `
+          <p>Hi,</p>
+          <p>Please verify your email by clicking the link below:</p>
+          <a href="${verificationURL}">Verify Email</a>
+          <p>This link expires in 24 hours.</p>
+        `,
+      });
+
+      // Mark email as sent
+      newUser.emailPending = false;
+      await newUser.save();
+
+    } catch (emailError) {
+      console.error("Brevo email failed:", emailError);
+      // Optional: delete the user if email fails
+      await User.findByIdAndDelete(newUser._id);
+
+      // Or leave user with emailPending = true to retry later
+    }
 
     res.status(201).json({
       success: true,
-      message: "User registered successfully. Please check your email to verify your account."
+      message: "User registered successfully. Please check your email to verify your account.",
     });
 
   } catch (error) {
@@ -63,6 +71,8 @@ exports.register = async (req, res) => {
     res.status(500).json({ message: error.message, success: false });
   }
 };
+
+
 
 // Verify email
 exports.verifyEmail = async (req, res) => {
