@@ -175,6 +175,26 @@ router.put("/:id", auth, userController.updateUser);
 
 /**
  * @swagger
+ * /api/users/delete-account:
+ *   delete:
+ *     tags:
+ *       - Users
+ *     summary: Delete own account
+ *     description: Delete the currently authenticated user's account
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Account deleted successfully
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.delete("/delete-account", auth, userController.deleteAccount);
+
+/**
+ * @swagger
  * /api/users/{id}:
  *   delete:
  *     tags:
@@ -204,24 +224,6 @@ router.put("/:id", auth, userController.updateUser);
  */
 router.delete("/:id", auth, userController.deleteUser);
 
-/**
- * @swagger
- * /api/users/delete-account:
- *   delete:
- *     tags:
- *       - Users
- *     summary: Delete own account
- *     description: Delete the currently authenticated user's account
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Account deleted successfully
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Server error
- */
-router.delete("/delete-account", auth, userController.deleteAccount);
+
 
 module.exports = router;
