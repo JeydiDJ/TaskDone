@@ -18,3 +18,5 @@ export class HomeComponent implements OnInit {
     }
   }
 }
+
+//Author: JD DE JESUS
