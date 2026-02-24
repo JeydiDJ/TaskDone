@@ -1,4 +1,4 @@
-![TaskDone Logo](task-management-app/src/assets/taskdone-full-logo.png)
+![TaskDone Logo](task-management-app/src/assets/taskdone-banner-logo.png)
 
 # TaskDone
 
