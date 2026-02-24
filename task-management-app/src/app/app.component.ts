@@ -45,8 +45,8 @@ export class AppComponent implements OnInit {
       { name: 'robots', content: 'index, follow' },
       { property: 'og:title', content: 'Task Management App' },
       { property: 'og:description', content: 'A simple task management app built using Angular, Node.js, Express, and MongoDB.' },
-      { property: 'og:image', content: 'https://task-done-g10.vercel.app/' },
-      { property: 'og:url', content: 'https://task-done-g10.vercel.app/' },
+      { property: 'og:image', content: 'https://www.taskdone.digital/' },
+      { property: 'og:url', content: 'https://www.taskdone.digital/' },
     ]);
   }
 
