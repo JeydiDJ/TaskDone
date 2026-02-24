@@ -18,7 +18,8 @@ const app = express();
     // CORS: allow local dev + Vercel frontend
     const allowedOrigins = [
       'http://localhost:4200',
-      'https://task-done-g10.vercel.app'
+      'https://task-done-g10.vercel.app',
+      'https://www.taskdone.digital',
     ];
     app.use(cors({
       origin: allowedOrigins,
