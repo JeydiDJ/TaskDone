@@ -32,39 +32,40 @@ export class TaskEditComponent implements OnInit {
 
   constructor() {
     this.taskForm = this.fb.group(
-  {
-    title: ['', [Validators.required, Validators.minLength(3)]],
-    description: ['', [Validators.required, Validators.minLength(3)]],
-    startDate: [''], 
-    deadline: ['', Validators.required],
-    priority: ['', Validators.required],
-    userId: ['', Validators.required],
-  },
-  { validators: this.deadlineAfterStartValidator }
-);
+      {
+        title: ['', [Validators.required, Validators.minLength(3)]],
+        description: ['', [Validators.required, Validators.minLength(3)]],
+        startDate: [''],
+        deadline: ['', Validators.required],
+        priority: ['', Validators.required],
+        userId: ['', Validators.required],
+      },
+      { validators: this.deadlineAfterStartValidator }
+    );
   }
 
   ngOnInit() {
     this.taskId = this.route.snapshot.paramMap.get('id') || '';
     this.loading = true;
-    
+
     // Load task details
     this.taskService.getTaskById(this.taskId).subscribe({
       next: (response) => {
         const task = response.data;
+
         this.taskForm.patchValue({
           title: task.title,
           description: task.description,
           startDate: task.startDate
-          ? new Date(task.startDate).toISOString().slice(0, 16)
-          : '',
-
+            ? this.formatForDateTimeLocal(task.startDate)
+            : '',
           deadline: task.deadline
-            ? new Date(task.deadline).toISOString().slice(0, 16)
+            ? this.formatForDateTimeLocal(task.deadline)
             : '',
           priority: task.priority,
           userId: task.user._id,
         });
+
         this.loading = false;
       },
       error: (error) => {
@@ -74,11 +75,22 @@ export class TaskEditComponent implements OnInit {
       }
     });
 
-    // Load users for assignment
     this.getUsers();
   }
 
+  // ✅ LOCAL TIME formatter for datetime-local inputs
+  private formatForDateTimeLocal(dateString: string): string {
+    const date = new Date(dateString);
+    const pad = (n: number) => n.toString().padStart(2, '0');
 
+    return (
+      date.getFullYear() + '-' +
+      pad(date.getMonth() + 1) + '-' +
+      pad(date.getDate()) + 'T' +
+      pad(date.getHours()) + ':' +
+      pad(date.getMinutes())
+    );
+  }
 
   getUsers() {
     this.auth.getUsers().subscribe({
@@ -92,17 +104,17 @@ export class TaskEditComponent implements OnInit {
   }
 
   deadlineAfterStartValidator(group: FormGroup) {
-  const start = group.get('startDate')?.value;
-  const deadline = group.get('deadline')?.value;
+    const start = group.get('startDate')?.value;
+    const deadline = group.get('deadline')?.value;
 
-  if (start && deadline) {
-    if (new Date(deadline) <= new Date(start)) {
-      return { deadlineBeforeStart: true };
+    if (start && deadline) {
+      if (new Date(deadline) <= new Date(start)) {
+        return { deadlineBeforeStart: true };
+      }
     }
-  }
 
-  return null;
-}
+    return null;
+  }
 
   updateTask() {
     if (this.taskForm.invalid) {
