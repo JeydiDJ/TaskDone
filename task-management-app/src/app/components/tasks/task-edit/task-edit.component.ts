@@ -17,6 +17,8 @@ export class TaskEditComponent implements OnInit {
   taskId: string = '';
   loading = false;
   error: string | null = null;
+  minDate: string = new Date().toISOString().split('T')[0];
+  minDateTime: string = new Date().toISOString().slice(0, 16);
   users: User[] = [];
 
   router = inject(Router);
@@ -27,25 +29,12 @@ export class TaskEditComponent implements OnInit {
   usersService = inject(UsersService);
 
   constructor() {
-    const now = new Date();
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    const minDateTime =
-      now.getFullYear() +
-      '-' +
-      pad(now.getMonth() + 1) +
-      '-' +
-      pad(now.getDate()) +
-      'T' +
-      pad(now.getHours()) +
-      ':' +
-      pad(now.getMinutes());
-
     this.taskForm = this.fb.group(
       {
         title: ['', [Validators.required, Validators.minLength(3)]],
         description: ['', [Validators.required, Validators.minLength(3)]],
-        startDate: [minDateTime],
-        deadline: [minDateTime, Validators.required],
+        startDate: [''],
+        deadline: ['', Validators.required],
         priority: ['', Validators.required],
         userId: ['', Validators.required],
       },
@@ -64,8 +53,8 @@ export class TaskEditComponent implements OnInit {
         this.taskForm.patchValue({
           title: task.title,
           description: task.description,
-          startDate: task.startDate ? this.utcToLocal(task.startDate) : '',
-          deadline: task.deadline ? this.utcToLocal(task.deadline) : '',
+          startDate: task.startDate ? this.formatForDateTimeLocal(task.startDate) : '',
+          deadline: task.deadline ? this.formatForDateTimeLocal(task.deadline) : '',
           priority: task.priority,
           userId: task.user._id,
         });
@@ -82,33 +71,37 @@ export class TaskEditComponent implements OnInit {
     this.getUsers();
   }
 
-  // UTC → local datetime-local string
-  private utcToLocal(datetimeUTC: string): string {
-    if (!datetimeUTC) return '';
-    const date = new Date(datetimeUTC);
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    return (
-      date.getFullYear() +
-      '-' +
-      pad(date.getMonth() + 1) +
-      '-' +
-      pad(date.getDate()) +
-      'T' +
-      pad(date.getHours()) +
-      ':' +
-      pad(date.getMinutes())
-    );
-  }
+  // Format ISO string to datetime-local input
+private formatForDateTimeLocal(dateString: string): string {
+  const date = new Date(dateString);
 
-  // Local datetime → UTC ISO string for backend
-  private localToUTC(datetimeLocal: string): string {
+  // Add 8 hours to compensate for the subtraction when saving
+  date.setHours(date.getHours() + 8);
+
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return (
+    date.getFullYear() +
+    '-' +
+    pad(date.getMonth() + 1) +
+    '-' +
+    pad(date.getDate()) +
+    'T' +
+    pad(date.getHours()) +
+    ':' +
+    pad(date.getMinutes())
+  );
+}
+
+  // Convert datetime-local string to ISO string (UTC) **subtracting 8 hours**
+  private toUTCISOString(datetimeLocal: string): string {
     if (!datetimeLocal) return '';
     const [datePart, timePart] = datetimeLocal.split('T');
     const [year, month, day] = datePart.split('-').map(Number);
     const [hours, minutes] = timePart.split(':').map(Number);
 
-    const localDate = new Date(year, month - 1, day, hours, minutes);
-    return localDate.toISOString(); // Converts to UTC
+    // Subtract 8 hours
+    const localDate = new Date(year, month - 1, day, hours - 8, minutes);
+    return localDate.toISOString();
   }
 
   getUsers() {
@@ -123,9 +116,16 @@ export class TaskEditComponent implements OnInit {
   }
 
   deadlineAfterStartValidator(group: FormGroup) {
-    const start = new Date(group.get('startDate')?.value);
-    const deadline = new Date(group.get('deadline')?.value);
-    return deadline >= start ? null : { deadlineBeforeStart: true };
+    const start = group.get('startDate')?.value;
+    const deadline = group.get('deadline')?.value;
+
+    if (start && deadline) {
+      if (new Date(deadline) <= new Date(start)) {
+        return { deadlineBeforeStart: true };
+      }
+    }
+
+    return null;
   }
 
   updateTask() {
@@ -134,15 +134,17 @@ export class TaskEditComponent implements OnInit {
     const updatedTask = {
       title: this.taskForm.value.title,
       description: this.taskForm.value.description,
-      startDate: this.localToUTC(this.taskForm.value.startDate),
-      deadline: this.localToUTC(this.taskForm.value.deadline),
+      startDate: this.toUTCISOString(this.taskForm.value.startDate),
+      deadline: this.toUTCISOString(this.taskForm.value.deadline),
       priority: this.taskForm.value.priority,
       userId: this.taskForm.value.userId,
     };
 
     this.loading = true;
     this.taskService.updateTask(this.taskId, updatedTask).subscribe({
-      next: () => this.router.navigate(['/tasks', this.taskId]),
+      next: () => {
+        this.router.navigate(['/tasks', this.taskId]);
+      },
       error: (error) => {
         console.error('Error updating task:', error);
         this.error = 'Failed to update task';
