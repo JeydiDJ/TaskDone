@@ -29,7 +29,17 @@ export class TaskFormComponent {
 
   constructor() {
     const now = new Date();
-    this.minDateTime = now.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:mm"
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    this.minDateTime =
+      now.getFullYear() +
+      '-' +
+      pad(now.getMonth() + 1) +
+      '-' +
+      pad(now.getDate()) +
+      'T' +
+      pad(now.getHours()) +
+      ':' +
+      pad(now.getMinutes());
 
     this.taskForm = this.fb.group(
       {
