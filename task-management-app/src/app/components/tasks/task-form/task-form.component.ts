@@ -49,19 +49,17 @@ export class TaskFormComponent {
     return end >= start ? null : { deadlineBeforeStart: true };
   }
 
-  // Convert datetime-local string to ISO string while preserving local time
-  private toLocalISOString(datetimeLocal: string): string {
+  // Convert datetime-local string to UTC ISO string without shifting time incorrectly
+  private toUTCISOString(datetimeLocal: string): string {
     if (!datetimeLocal) return '';
     const [datePart, timePart] = datetimeLocal.split('T');
     const [year, month, day] = datePart.split('-').map(Number);
     const [hours, minutes] = timePart.split(':').map(Number);
 
-    // Construct a local Date object
-    const localDate = new Date(year, month - 1, day, hours, minutes);
-
-    // Convert to UTC by adjusting timezone offset
-    const utcDate = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000);
-    return utcDate.toISOString();
+    // Construct the UTC date using Date.UTC
+    return new Date(
+      Date.UTC(year, month - 1, day, hours, minutes)
+    ).toISOString();
   }
 
   createTask() {
@@ -76,8 +74,8 @@ export class TaskFormComponent {
     const task = {
       title: this.taskForm.value.title,
       description: this.taskForm.value.description,
-      startDate: this.toLocalISOString(this.taskForm.value.startDate),
-      deadline: this.toLocalISOString(this.taskForm.value.deadline),
+      startDate: this.toUTCISOString(this.taskForm.value.startDate),
+      deadline: this.toUTCISOString(this.taskForm.value.deadline),
       priority: this.taskForm.value.priority,
       userId: userId,
     };

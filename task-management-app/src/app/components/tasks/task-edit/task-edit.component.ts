@@ -89,16 +89,15 @@ export class TaskEditComponent implements OnInit {
     );
   }
 
-  // Convert datetime-local string to UTC ISO string preserving local time
-  private toLocalISOString(datetimeLocal: string): string {
+  // Convert datetime-local string to UTC ISO string while preserving the local time
+  private toUTCISOString(datetimeLocal: string): string {
     if (!datetimeLocal) return '';
     const [datePart, timePart] = datetimeLocal.split('T');
     const [year, month, day] = datePart.split('-').map(Number);
     const [hours, minutes] = timePart.split(':').map(Number);
 
-    const localDate = new Date(year, month - 1, day, hours, minutes);
-    const utcDate = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000);
-    return utcDate.toISOString();
+    // Construct UTC date directly using Date.UTC
+    return new Date(Date.UTC(year, month - 1, day, hours, minutes)).toISOString();
   }
 
   getUsers() {
@@ -131,8 +130,8 @@ export class TaskEditComponent implements OnInit {
     const updatedTask = {
       title: this.taskForm.value.title,
       description: this.taskForm.value.description,
-      startDate: this.toLocalISOString(this.taskForm.value.startDate),
-      deadline: this.toLocalISOString(this.taskForm.value.deadline),
+      startDate: this.toUTCISOString(this.taskForm.value.startDate),
+      deadline: this.toUTCISOString(this.taskForm.value.deadline),
       priority: this.taskForm.value.priority,
       userId: this.taskForm.value.userId,
     };
