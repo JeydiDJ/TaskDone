@@ -61,15 +61,15 @@ export class TaskFormComponent {
     return end >= start ? null : { deadlineBeforeStart: true };
   }
 
-  // Convert datetime-local string to ISO string (UTC) while preserving the exact time
+  // Convert datetime-local string to ISO string (UTC) while **subtracting 8 hours**
   private toUTCISOString(datetimeLocal: string): string {
     if (!datetimeLocal) return '';
     const [datePart, timePart] = datetimeLocal.split('T');
     const [year, month, day] = datePart.split('-').map(Number);
     const [hours, minutes] = timePart.split(':').map(Number);
 
-    // Create local date object and convert to ISO string
-    const localDate = new Date(year, month - 1, day, hours, minutes);
+    // Subtract 8 hours to compensate for the shift
+    const localDate = new Date(year, month - 1, day, hours - 8, minutes);
     return localDate.toISOString();
   }
 
@@ -93,7 +93,6 @@ export class TaskFormComponent {
 
     this.taskService.createTask(task).subscribe({
       next: () => {
-        // Calculate days until deadline for reminder
         const deadlineDate = new Date(this.taskForm.value.deadline);
         const today = new Date();
         const timeDiff = deadlineDate.getTime() - today.getTime();
