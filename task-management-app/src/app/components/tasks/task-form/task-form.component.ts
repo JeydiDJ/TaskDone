@@ -69,7 +69,7 @@ export class TaskFormComponent {
     const [hours, minutes] = timePart.split(':').map(Number);
 
     // Subtract 8 hours to compensate for the shift
-    const localDate = new Date(year, month - 1, day, hours - 8, minutes);
+    const localDate = new Date(year, month - 1, day, hours, minutes);
     return localDate.toISOString();
   }
 
