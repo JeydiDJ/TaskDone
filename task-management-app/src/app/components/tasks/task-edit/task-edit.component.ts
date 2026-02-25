@@ -71,7 +71,7 @@ export class TaskEditComponent implements OnInit {
     this.getUsers();
   }
 
-  // Convert UTC/ISO string to datetime-local for inputs
+  // Format ISO string to datetime-local input
   private formatForDateTimeLocal(dateString: string): string {
     const date = new Date(dateString);
     const pad = (n: number) => n.toString().padStart(2, '0');
@@ -89,15 +89,9 @@ export class TaskEditComponent implements OnInit {
     );
   }
 
-  // Convert datetime-local string to UTC ISO string while preserving the local time
-  private toUTCISOString(datetimeLocal: string): string {
-    if (!datetimeLocal) return '';
-    const [datePart, timePart] = datetimeLocal.split('T');
-    const [year, month, day] = datePart.split('-').map(Number);
-    const [hours, minutes] = timePart.split(':').map(Number);
-
-    // Construct UTC date directly using Date.UTC
-    return new Date(Date.UTC(year, month - 1, day, hours, minutes)).toISOString();
+  // Preserve local datetime string exactly as user entered
+  private preserveLocalDateTime(datetimeLocal: string): string {
+    return datetimeLocal ? `${datetimeLocal}:00.000` : ''; // add seconds + ms
   }
 
   getUsers() {
@@ -130,8 +124,8 @@ export class TaskEditComponent implements OnInit {
     const updatedTask = {
       title: this.taskForm.value.title,
       description: this.taskForm.value.description,
-      startDate: this.toUTCISOString(this.taskForm.value.startDate),
-      deadline: this.toUTCISOString(this.taskForm.value.deadline),
+      startDate: this.preserveLocalDateTime(this.taskForm.value.startDate),
+      deadline: this.preserveLocalDateTime(this.taskForm.value.deadline),
       priority: this.taskForm.value.priority,
       userId: this.taskForm.value.userId,
     };
