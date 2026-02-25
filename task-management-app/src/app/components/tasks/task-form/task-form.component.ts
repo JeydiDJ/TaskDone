@@ -11,9 +11,9 @@ import { AuthService } from '../../../services/auth.service';
 import { NgClass } from '@angular/common';
 
 @Component({
-    selector: 'app-task-form',
-    imports: [ReactiveFormsModule, NgClass, RouterLink, ],
-    templateUrl: './task-form.component.html',
+  selector: 'app-task-form',
+  imports: [ReactiveFormsModule, NgClass, RouterLink],
+  templateUrl: './task-form.component.html',
 })
 export class TaskFormComponent {
   taskForm: FormGroup;
@@ -31,13 +31,16 @@ export class TaskFormComponent {
     const now = new Date();
     this.minDateTime = now.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:mm"
 
-    this.taskForm = this.fb.group({
-      title: ['', [Validators.required, Validators.minLength(3)]],
-      description: ['', [Validators.required, Validators.minLength(3)]],
-      startDate: [this.minDateTime],
-      deadline: [this.minDateTime, Validators.required],
-      priority: ['', Validators.required],
-    },  { validators: this.deadlineAfterStartDate });
+    this.taskForm = this.fb.group(
+      {
+        title: ['', [Validators.required, Validators.minLength(3)]],
+        description: ['', [Validators.required, Validators.minLength(3)]],
+        startDate: [this.minDateTime],
+        deadline: [this.minDateTime, Validators.required],
+        priority: ['', Validators.required],
+      },
+      { validators: this.deadlineAfterStartDate }
+    );
   }
 
   deadlineAfterStartDate(group: FormGroup) {
@@ -46,12 +49,21 @@ export class TaskFormComponent {
     return end >= start ? null : { deadlineBeforeStart: true };
   }
 
+  // Convert datetime-local string to ISO string preserving local time
+  private toLocalISOString(datetimeLocal: string): string {
+    if (!datetimeLocal) return '';
+    const [datePart, timePart] = datetimeLocal.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hours, minutes] = timePart.split(':').map(Number);
+    const date = new Date(year, month - 1, day, hours, minutes);
+    return date.toISOString();
+  }
+
   createTask() {
     if (this.taskForm.invalid) {
       return;
     }
 
-    // Get current user ID from auth service
     const userId = this.auth.getCurrentUserId();
     if (!userId) {
       console.error('No current user found');
@@ -61,15 +73,14 @@ export class TaskFormComponent {
     const task = {
       title: this.taskForm.value.title,
       description: this.taskForm.value.description,
-      startDate: this.taskForm.value.startDate,
-      deadline: this.taskForm.value.deadline,
+      startDate: this.toLocalISOString(this.taskForm.value.startDate),
+      deadline: this.toLocalISOString(this.taskForm.value.deadline),
       priority: this.taskForm.value.priority,
       userId: userId,
     };
 
     this.taskService.createTask(task).subscribe({
       next: () => {
-        // Calculate days until deadline
         const deadlineDate = new Date(this.taskForm.value.deadline);
         const today = new Date();
         const timeDiff = deadlineDate.getTime() - today.getTime();
@@ -77,14 +88,15 @@ export class TaskFormComponent {
 
         let reminderMessage = '';
         if (daysDiff === 1) {
-          reminderMessage = "Hey! Since you set the deadline in just 1 day, you'll get a reminder later to complete it. Do well and get that Task Done";
+          reminderMessage =
+            "Hey! Since you set the deadline in just 1 day, you'll get a reminder later to complete it. Do well and get that Task Done";
         } else {
-          reminderMessage = "Hey! Since you set the deadline for more than a day, you'll be reminded for the deadline to accomplish it. Do well and get that Task Done";
+          reminderMessage =
+            "Hey! Since you set the deadline for more than a day, you'll be reminded for the deadline to accomplish it. Do well and get that Task Done";
         }
 
-        // Navigate to tasks list with reminder data
         this.router.navigate(['/tasks'], {
-          queryParams: { reminder: reminderMessage }
+          queryParams: { reminder: reminderMessage },
         });
       },
       error: (error) => {
@@ -93,11 +105,12 @@ export class TaskFormComponent {
           this.errorMessage.set('Your session has expired. Please log in again.');
           setTimeout(() => {
             this.router.navigate(['/login']);
-          }, 2000); // Show message for 2 seconds before redirect
+          }, 2000);
         } else if (error.status === 404) {
           this.errorMessage.set('Server not found. Please check your connection.');
         } else {
-          const message = error.error?.message || 'An error occurred while creating the task. Please try again.';
+          const message =
+            error.error?.message || 'An error occurred while creating the task. Please try again.';
           this.errorMessage.set(message);
         }
       },
