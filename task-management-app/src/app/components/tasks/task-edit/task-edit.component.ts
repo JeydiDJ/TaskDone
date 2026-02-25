@@ -20,8 +20,6 @@ export class TaskEditComponent implements OnInit {
   minDate: string = new Date().toISOString().split('T')[0];
   minDateTime: string = new Date().toISOString().slice(0, 16);
   users: User[] = [];
-  isloading = { set: (value: boolean) => { this.loading = value; } };
-  iserror: string | null = null;
 
   router = inject(Router);
   route = inject(ActivatedRoute);
@@ -48,7 +46,6 @@ export class TaskEditComponent implements OnInit {
     this.taskId = this.route.snapshot.paramMap.get('id') || '';
     this.loading = true;
 
-    // Load task details
     this.taskService.getTaskById(this.taskId).subscribe({
       next: (response) => {
         const task = response.data;
@@ -56,12 +53,8 @@ export class TaskEditComponent implements OnInit {
         this.taskForm.patchValue({
           title: task.title,
           description: task.description,
-          startDate: task.startDate
-            ? this.formatForDateTimeLocal(task.startDate)
-            : '',
-          deadline: task.deadline
-            ? this.formatForDateTimeLocal(task.deadline)
-            : '',
+          startDate: task.startDate ? this.formatForDateTimeLocal(task.startDate) : '',
+          deadline: task.deadline ? this.formatForDateTimeLocal(task.deadline) : '',
           priority: task.priority,
           userId: task.user._id,
         });
@@ -72,24 +65,40 @@ export class TaskEditComponent implements OnInit {
         console.error('Error loading task:', error);
         this.error = 'Error loading task details';
         this.loading = false;
-      }
+      },
     });
 
     this.getUsers();
   }
 
-  // ✅ LOCAL TIME formatter for datetime-local inputs
+  // Convert UTC/ISO string to datetime-local for inputs
   private formatForDateTimeLocal(dateString: string): string {
     const date = new Date(dateString);
     const pad = (n: number) => n.toString().padStart(2, '0');
 
     return (
-      date.getFullYear() + '-' +
-      pad(date.getMonth() + 1) + '-' +
-      pad(date.getDate()) + 'T' +
-      pad(date.getHours()) + ':' +
+      date.getFullYear() +
+      '-' +
+      pad(date.getMonth() + 1) +
+      '-' +
+      pad(date.getDate()) +
+      'T' +
+      pad(date.getHours()) +
+      ':' +
       pad(date.getMinutes())
     );
+  }
+
+  // Convert datetime-local string to UTC ISO string preserving local time
+  private toLocalISOString(datetimeLocal: string): string {
+    if (!datetimeLocal) return '';
+    const [datePart, timePart] = datetimeLocal.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hours, minutes] = timePart.split(':').map(Number);
+
+    const localDate = new Date(year, month - 1, day, hours, minutes);
+    const utcDate = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000);
+    return utcDate.toISOString();
   }
 
   getUsers() {
@@ -117,15 +126,13 @@ export class TaskEditComponent implements OnInit {
   }
 
   updateTask() {
-    if (this.taskForm.invalid) {
-      return;
-    }
+    if (this.taskForm.invalid) return;
 
     const updatedTask = {
       title: this.taskForm.value.title,
       description: this.taskForm.value.description,
-      startDate: this.taskForm.value.startDate,
-      deadline: this.taskForm.value.deadline,
+      startDate: this.toLocalISOString(this.taskForm.value.startDate),
+      deadline: this.toLocalISOString(this.taskForm.value.deadline),
       priority: this.taskForm.value.priority,
       userId: this.taskForm.value.userId,
     };

@@ -49,20 +49,23 @@ export class TaskFormComponent {
     return end >= start ? null : { deadlineBeforeStart: true };
   }
 
-  // Convert datetime-local string to ISO string preserving local time
+  // Convert datetime-local string to ISO string while preserving local time
   private toLocalISOString(datetimeLocal: string): string {
     if (!datetimeLocal) return '';
     const [datePart, timePart] = datetimeLocal.split('T');
     const [year, month, day] = datePart.split('-').map(Number);
     const [hours, minutes] = timePart.split(':').map(Number);
-    const date = new Date(year, month - 1, day, hours, minutes);
-    return date.toISOString();
+
+    // Construct a local Date object
+    const localDate = new Date(year, month - 1, day, hours, minutes);
+
+    // Convert to UTC by adjusting timezone offset
+    const utcDate = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000);
+    return utcDate.toISOString();
   }
 
   createTask() {
-    if (this.taskForm.invalid) {
-      return;
-    }
+    if (this.taskForm.invalid) return;
 
     const userId = this.auth.getCurrentUserId();
     if (!userId) {
@@ -81,19 +84,16 @@ export class TaskFormComponent {
 
     this.taskService.createTask(task).subscribe({
       next: () => {
+        // Calculate days until deadline for reminder
         const deadlineDate = new Date(this.taskForm.value.deadline);
         const today = new Date();
         const timeDiff = deadlineDate.getTime() - today.getTime();
         const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
-        let reminderMessage = '';
-        if (daysDiff === 1) {
-          reminderMessage =
-            "Hey! Since you set the deadline in just 1 day, you'll get a reminder later to complete it. Do well and get that Task Done";
-        } else {
-          reminderMessage =
-            "Hey! Since you set the deadline for more than a day, you'll be reminded for the deadline to accomplish it. Do well and get that Task Done";
-        }
+        const reminderMessage =
+          daysDiff === 1
+            ? "Hey! Since you set the deadline in just 1 day, you'll get a reminder later to complete it. Do well and get that Task Done"
+            : "Hey! Since you set the deadline for more than a day, you'll be reminded for the deadline to accomplish it. Do well and get that Task Done";
 
         this.router.navigate(['/tasks'], {
           queryParams: { reminder: reminderMessage },
@@ -103,9 +103,7 @@ export class TaskFormComponent {
         console.error('Error creating task:', error);
         if (error.status === 401) {
           this.errorMessage.set('Your session has expired. Please log in again.');
-          setTimeout(() => {
-            this.router.navigate(['/login']);
-          }, 2000);
+          setTimeout(() => this.router.navigate(['/login']), 2000);
         } else if (error.status === 404) {
           this.errorMessage.set('Server not found. Please check your connection.');
         } else {
