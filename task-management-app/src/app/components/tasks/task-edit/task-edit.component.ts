@@ -76,7 +76,7 @@ private formatForDateTimeLocal(dateString: string): string {
   const date = new Date(dateString);
 
   // Add 8 hours to compensate for the subtraction when saving
-  date.setHours(date.getHours() - 16);
+  date.setHours(date.getHours() + 8);
 
   const pad = (n: number) => n.toString().padStart(2, '0');
   return (
