@@ -30,6 +30,8 @@ export class TaskFormComponent {
   constructor() {
     const now = new Date();
     const pad = (n: number) => n.toString().padStart(2, '0');
+
+    // Initialize datetime-local with current local time
     this.minDateTime =
       now.getFullYear() +
       '-' +
@@ -59,9 +61,16 @@ export class TaskFormComponent {
     return end >= start ? null : { deadlineBeforeStart: true };
   }
 
-  // Keep datetime-local string as-is to preserve local time
-  private preserveLocalDateTime(datetimeLocal: string): string {
-    return datetimeLocal ? `${datetimeLocal}:00.000` : ''; // Add seconds and ms
+  // Convert datetime-local string to ISO string (UTC) while preserving the exact time
+  private toUTCISOString(datetimeLocal: string): string {
+    if (!datetimeLocal) return '';
+    const [datePart, timePart] = datetimeLocal.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
+    const [hours, minutes] = timePart.split(':').map(Number);
+
+    // Create local date object and convert to ISO string
+    const localDate = new Date(year, month - 1, day, hours, minutes);
+    return localDate.toISOString();
   }
 
   createTask() {
@@ -76,8 +85,8 @@ export class TaskFormComponent {
     const task = {
       title: this.taskForm.value.title,
       description: this.taskForm.value.description,
-      startDate: this.preserveLocalDateTime(this.taskForm.value.startDate),
-      deadline: this.preserveLocalDateTime(this.taskForm.value.deadline),
+      startDate: this.toUTCISOString(this.taskForm.value.startDate),
+      deadline: this.toUTCISOString(this.taskForm.value.deadline),
       priority: this.taskForm.value.priority,
       userId: userId,
     };
