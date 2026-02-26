@@ -73,8 +73,23 @@ export class TaskEditComponent implements OnInit {
 
   // Format ISO string to datetime-local input
 private formatForDateTimeLocal(dateString: string): string {
-  return new Date(dateString).toISOString().slice(0, 16);
+  const date = new Date(dateString);
+
+  const pad = (n: number) => n.toString().padStart(2, '0');
+
+  return (
+    date.getFullYear() +
+    '-' +
+    pad(date.getMonth() + 1) +
+    '-' +
+    pad(date.getDate()) +
+    'T' +
+    pad(date.getHours()) +
+    ':' +
+    pad(date.getMinutes())
+  );
 }
+
 
 private toUTCISOString(datetimeLocal: string): string {
   return new Date(datetimeLocal).toISOString();
