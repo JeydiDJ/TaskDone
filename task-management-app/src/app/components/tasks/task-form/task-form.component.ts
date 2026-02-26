@@ -31,7 +31,7 @@ export class TaskFormComponent {
     const now = new Date();
     const pad = (n: number) => n.toString().padStart(2, '0');
 
-    // Initialize datetime-local with current local time
+    // ✅ Current LOCAL time for datetime-local
     this.minDateTime =
       now.getFullYear() +
       '-' +
@@ -55,22 +55,21 @@ export class TaskFormComponent {
     );
   }
 
+  // ✅ Null-safe validator
   deadlineAfterStartDate(group: FormGroup) {
-    const start = new Date(group.get('startDate')?.value);
-    const end = new Date(group.get('deadline')?.value);
-    return end >= start ? null : { deadlineBeforeStart: true };
+    const start = group.get('startDate')?.value;
+    const end = group.get('deadline')?.value;
+
+    if (!start || !end) return null;
+
+    return new Date(end) >= new Date(start)
+      ? null
+      : { deadlineBeforeStart: true };
   }
 
-  // Convert datetime-local string to ISO string (UTC) while **subtracting 8 hours**
+  // ✅ CORRECT conversion: local → UTC
   private toUTCISOString(datetimeLocal: string): string {
-    if (!datetimeLocal) return '';
-    const [datePart, timePart] = datetimeLocal.split('T');
-    const [year, month, day] = datePart.split('-').map(Number);
-    const [hours, minutes] = timePart.split(':').map(Number);
-
-    // Subtract 8 hours to compensate for the shift
-    const localDate = new Date(year, month - 1, day, hours, minutes);
-    return localDate.toISOString();
+    return new Date(datetimeLocal).toISOString();
   }
 
   createTask() {
@@ -88,7 +87,7 @@ export class TaskFormComponent {
       startDate: this.toUTCISOString(this.taskForm.value.startDate),
       deadline: this.toUTCISOString(this.taskForm.value.deadline),
       priority: this.taskForm.value.priority,
-      userId: userId,
+      userId,
     };
 
     this.taskService.createTask(task).subscribe({
@@ -109,15 +108,17 @@ export class TaskFormComponent {
       },
       error: (error) => {
         console.error('Error creating task:', error);
+
         if (error.status === 401) {
           this.errorMessage.set('Your session has expired. Please log in again.');
           setTimeout(() => this.router.navigate(['/login']), 2000);
         } else if (error.status === 404) {
           this.errorMessage.set('Server not found. Please check your connection.');
         } else {
-          const message =
-            error.error?.message || 'An error occurred while creating the task. Please try again.';
-          this.errorMessage.set(message);
+          this.errorMessage.set(
+            error.error?.message ||
+              'An error occurred while creating the task. Please try again.'
+          );
         }
       },
     });

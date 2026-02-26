@@ -73,36 +73,12 @@ export class TaskEditComponent implements OnInit {
 
   // Format ISO string to datetime-local input
 private formatForDateTimeLocal(dateString: string): string {
-  const date = new Date(dateString);
-
-  // Add 8 hours to compensate for the subtraction when saving
-  date.setHours(date.getHours() + 8);
-
-  const pad = (n: number) => n.toString().padStart(2, '0');
-  return (
-    date.getFullYear() +
-    '-' +
-    pad(date.getMonth() + 1) +
-    '-' +
-    pad(date.getDate()) +
-    'T' +
-    pad(date.getHours()) +
-    ':' +
-    pad(date.getMinutes())
-  );
+  return new Date(dateString).toISOString().slice(0, 16);
 }
 
-  // Convert datetime-local string to ISO string (UTC) **subtracting 8 hours**
-  private toUTCISOString(datetimeLocal: string): string {
-    if (!datetimeLocal) return '';
-    const [datePart, timePart] = datetimeLocal.split('T');
-    const [year, month, day] = datePart.split('-').map(Number);
-    const [hours, minutes] = timePart.split(':').map(Number);
-
-    // Subtract 8 hours
-    const localDate = new Date(year, month - 1, day, hours - 8, minutes);
-    return localDate.toISOString();
-  }
+private toUTCISOString(datetimeLocal: string): string {
+  return new Date(datetimeLocal).toISOString();
+}
 
   getUsers() {
     this.auth.getUsers().subscribe({
@@ -129,27 +105,30 @@ private formatForDateTimeLocal(dateString: string): string {
   }
 
   updateTask() {
-    if (this.taskForm.invalid) return;
+  if (this.taskForm.invalid) return;
 
-    const updatedTask = {
-      title: this.taskForm.value.title,
-      description: this.taskForm.value.description,
-      startDate: this.toUTCISOString(this.taskForm.value.startDate),
-      deadline: this.toUTCISOString(this.taskForm.value.deadline),
-      priority: this.taskForm.value.priority,
-      userId: this.taskForm.value.userId,
-    };
+  const updatedTask = {
+    title: this.taskForm.value.title,
+    description: this.taskForm.value.description,
+    startDate: this.taskForm.value.startDate
+      ? this.toUTCISOString(this.taskForm.value.startDate)
+      : null,
+    deadline: this.toUTCISOString(this.taskForm.value.deadline),
+    priority: this.taskForm.value.priority,
+    userId: this.taskForm.value.userId,
+  };
 
-    this.loading = true;
-    this.taskService.updateTask(this.taskId, updatedTask).subscribe({
-      next: () => {
-        this.router.navigate(['/tasks', this.taskId]);
-      },
-      error: (error) => {
-        console.error('Error updating task:', error);
-        this.error = 'Failed to update task';
-        this.loading = false;
-      },
-    });
-  }
+  this.loading = true;
+
+  this.taskService.updateTask(this.taskId, updatedTask).subscribe({
+    next: () => {
+      this.router.navigate(['/tasks', this.taskId]);
+    },
+    error: (error) => {
+      console.error('Error updating task:', error);
+      this.error = 'Failed to update task';
+      this.loading = false;
+    },
+  });
+}
 }
