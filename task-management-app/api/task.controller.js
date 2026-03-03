@@ -84,6 +84,39 @@ const getAllTasksForUser = async (req, res) => {
     }
 };
 
+const getProgressStats = async (req, res) => {
+  try {
+    // Fetch tasks for the organization as plain JS objects
+    const tasks = await Task.find({ organization: req.user.organization })
+      .select('createdAt completedAt deadline completed')
+      .sort({ createdAt: -1 })
+      .lean(); // <-- ensures createdAt, completedAt, deadline are included
+
+    const now = new Date();
+
+    // Compute completed, pending, overdue
+    const completedTasks = tasks.filter(t => t.completed).length;
+    const pendingTasks = tasks.filter(t => !t.completed).length;
+    const overdueTasks = tasks.filter(t => !t.completed && t.deadline && t.deadline < now).length;
+    const overallProgress = tasks.length > 0
+      ? Math.round((completedTasks / tasks.length) * 100)
+      : 0;
+
+    // Send tasks with proper JS Date objects
+    sendResponse(res, 200, 'success', 'Progress statistics retrieved successfully', {
+      tasks,
+      completedTasks,
+      pendingTasks,
+      overdueTasks,
+      overallProgress
+    });
+
+  } catch (error) {
+    console.error('Get progress stats error:', error);
+    sendResponse(res, 500, 'error', 'Server error');
+  }
+};
+
 const getOngoingTasks = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -235,5 +268,6 @@ module.exports = {
     getCompletedTasks,
     getTaskById,
     updateTask,
-    deleteTask
+    deleteTask,
+    getProgressStats
 };

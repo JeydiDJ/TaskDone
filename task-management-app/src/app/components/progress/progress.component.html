@@ -79,9 +79,81 @@
     <canvas #progressCanvas class="w-full h-full"></canvas>
   </div>
 </div>
+</div>
 
+     <!-- ============================= -->
+<!-- DAILY & WEEKLY REPORT -->
+<!-- ============================= -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
 
-    </div>
+  <!-- DAILY REPORT -->
+  <div class="card p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+      <i class="fas fa-calendar-day mr-2 text-blue-500"></i>
+      Daily Report
+    </h2>
+    
+    <!-- Show stats if there is activity -->
+    <ng-container *ngIf="dailyCreated > 0; else noDaily">
+      <div class="space-y-3 text-gray-700">
+        <div class="flex justify-between items-center bg-blue-50 p-3 rounded-md">
+          <span>Created Today</span>
+          <span class="font-semibold text-blue-700">{{ dailyCreated }}</span>
+        </div>
+        <div class="flex justify-between items-center bg-green-50 p-3 rounded-md">
+          <span>Completed Today</span>
+          <span class="font-semibold text-green-700">{{ dailyCompleted }}</span>
+        </div>
+        <div class="flex justify-between items-center bg-yellow-50 p-3 rounded-md">
+          <span>Completion Rate</span>
+          <span class="font-semibold text-yellow-700">{{ dailyCompletionRate }}%</span>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Show placeholder if no activity -->
+    <ng-template #noDaily>
+      <div class="text-center text-gray-400 py-6">
+        <i class="fas fa-calendar-day text-4xl mb-3 animate-pulse"></i>
+        <p class="text-gray-500">No activity today.</p>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- WEEKLY REPORT -->
+  <div class="card p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+      <i class="fas fa-calendar-week mr-2 text-purple-500"></i>
+      Weekly Report
+    </h2>
+    
+    <!-- Show stats if there is activity -->
+    <ng-container *ngIf="weeklyCreated > 0; else noWeekly">
+      <div class="space-y-3 text-gray-700">
+        <div class="flex justify-between items-center bg-purple-50 p-3 rounded-md">
+          <span>Created This Week</span>
+          <span class="font-semibold text-purple-700">{{ weeklyCreated }}</span>
+        </div>
+        <div class="flex justify-between items-center bg-green-50 p-3 rounded-md">
+          <span>Completed This Week</span>
+          <span class="font-semibold text-green-700">{{ weeklyCompleted }}</span>
+        </div>
+        <div class="flex justify-between items-center bg-yellow-50 p-3 rounded-md">
+          <span>Completion Rate</span>
+          <span class="font-semibold text-yellow-700">{{ weeklyCompletionRate }}%</span>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Show placeholder if no activity -->
+    <ng-template #noWeekly>
+      <div class="text-center text-gray-400 py-6">
+        <i class="fas fa-calendar-week text-4xl mb-3 animate-pulse"></i>
+        <p class="text-gray-500">No activity this week.</p>
+      </div>
+    </ng-template>
+  </div>
+</div>
 
     <!-- ============================= -->
     <!-- MONTHLY BAR CHART -->
@@ -96,5 +168,7 @@
       </div>
     </div>
     
+
+
   </div>
 </div>

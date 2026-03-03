@@ -6,6 +6,7 @@ import {
   ElementRef,
   AfterViewInit,
   OnDestroy,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { TaskService } from '../../services/task.service';
 import { Chart, registerables } from 'chart.js';
@@ -13,8 +14,16 @@ import { NgIf } from '@angular/common';
 
 Chart.register(...registerables);
 
-interface CompletedTask {
-  completedAt: string;
+interface TaskItem {
+ _id: string;
+  title?: string;
+  description?: string;
+  userId?: string;
+  createdAt?: string | Date;
+  completedAt?: string | Date;
+  completed?: boolean;
+  priority?: string;
+  deadline?: string | Date; // <-- add this
 }
 
 @Component({
@@ -25,6 +34,7 @@ interface CompletedTask {
 })
 export class ProgressComponent implements OnInit, AfterViewInit, OnDestroy {
   private taskService = inject(TaskService);
+  private cdr = inject(ChangeDetectorRef);
 
   @ViewChild('progressCanvas') progressCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('monthlyCanvas') monthlyCanvas!: ElementRef<HTMLCanvasElement>;
@@ -34,11 +44,20 @@ export class ProgressComponent implements OnInit, AfterViewInit, OnDestroy {
   overdueTasks = 0;
   overallProgress = 0;
   totalTasks = 0;
+  
+  // Daily
+  dailyCompleted = 0;
+  dailyCreated = 0;
+  dailyCompletionRate = 0;
+
+  // Weekly
+  weeklyCompleted = 0;
+  weeklyCreated = 0;
+  weeklyCompletionRate = 0;
 
   pieChart!: Chart;
   barChart!: Chart;
 
-  // Store resize listener reference to remove it later
   private resizeListener = () => {
     if (this.pieChart) this.pieChart.resize();
     if (this.barChart) this.barChart.resize();
@@ -49,65 +68,137 @@ export class ProgressComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    // Listen for window resize to automatically resize charts
     window.addEventListener('resize', this.resizeListener);
   }
 
   ngOnDestroy(): void {
-    // Clean up listener when component is destroyed
     window.removeEventListener('resize', this.resizeListener);
   }
 
-  loadProgressStats(): void {
-    this.taskService.getProgressStats().subscribe({
-      next: (response) => {
-        // Main stats
-        this.completedTasks = response.data.completedTasks;
-        this.pendingTasks = response.data.pendingTasks;
-        this.overdueTasks = response.data.overdueTasks;
-        this.overallProgress = response.data.overallProgress;
+loadProgressStats(): void {
+  this.taskService.getProgressStats().subscribe({
+    next: (response) => {
+      console.log('=== RAW RESPONSE ===', response);
 
-        // Total tasks
-        this.totalTasks =
-          this.completedTasks +
-          this.pendingTasks +
-          this.overdueTasks;
+      // =========================
+      // Assign summary stats
+      // =========================
+      this.completedTasks = response.data.completedTasks;
+      this.pendingTasks = response.data.pendingTasks;
+      this.overdueTasks = response.data.overdueTasks;
+      this.overallProgress = response.data.overallProgress;
+      this.totalTasks = this.completedTasks + this.pendingTasks + this.overdueTasks;
 
-        if (this.totalTasks > 0) {
-          // Pie chart
-          if (!this.pieChart) this.createPieChart();
-          else this.updatePieChart();
+      const tasksRaw: TaskItem[] = response.data.tasks || [];
+      console.log('=== TASKS ARRAY ===', tasksRaw);
 
-          // Bar chart
-          const tasks: CompletedTask[] = response.data.tasks || [];
-          const now = new Date();
-          const months: string[] = [];
-          const monthlyCounts: number[] = [];
+      const now = new Date();
+      console.log('=== NOW ===', now);
 
-          for (let i = 5; i >= 0; i--) {
-            const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-            months.push(date.toLocaleString('default', { month: 'short' }));
+      // =========================
+      // Convert backend dates to JS Date objects safely
+      // =========================
+      const tasks = tasksRaw.map(t => ({
+        ...t,
+        createdAt: t.createdAt ? new Date(t.createdAt) : null,
+        completedAt: t.completedAt ? new Date(t.completedAt) : null,
+        deadline: t.deadline ? new Date(t.deadline) : null,
+      }));
 
-            const count = tasks.filter((task) => {
-              const completed = new Date(task.completedAt);
-              return (
-                completed.getMonth() === date.getMonth() &&
-                completed.getFullYear() === date.getFullYear()
-              );
-            }).length;
+      // =========================
+      // Helper: get local year/month/day
+      // =========================
+      const getLocalYMD = (date: Date | null) => {
+        if (!date) return null;
+        return { y: date.getFullYear(), m: date.getMonth(), d: date.getDate() };
+      };
 
-            monthlyCounts.push(count);
-          }
+      const todayYMD = getLocalYMD(now);
+      if (!todayYMD) {
+        console.error('Invalid current date');
+        return;
+      }
 
-          if (!this.barChart) this.createBarChart();
-          this.updateBarChart(months, monthlyCounts);
+      const isSameDay = (date: Date | null) => {
+        if (!date) return false;
+        const d = getLocalYMD(date);
+        return d!.y === todayYMD.y && d!.m === todayYMD.m && d!.d === todayYMD.d;
+      };
+
+      // =========================
+      // Start of the week (Sunday)
+      // =========================
+      const startOfWeek = new Date(now);
+      startOfWeek.setHours(0, 0, 0, 0);
+      startOfWeek.setDate(now.getDate() - now.getDay());
+
+      const isThisWeek = (date: Date | null) => {
+        if (!date) return false;
+        const d = new Date(date);
+        d.setHours(0, 0, 0, 0);
+        return d.getTime() >= startOfWeek.getTime();
+      };
+
+      // =========================
+      // DAILY REPORT
+      // =========================
+      this.dailyCreated = tasks.filter(t => t.createdAt && isSameDay(t.createdAt)).length;
+      this.dailyCompleted = tasks.filter(t => t.completedAt && isSameDay(t.completedAt)).length;
+      this.dailyCompletionRate = this.dailyCreated > 0
+        ? Math.round((this.dailyCompleted / this.dailyCreated) * 100)
+        : 0;
+
+      console.log('=== DAILY RESULTS ===');
+      console.log('Daily Created:', this.dailyCreated);
+      console.log('Daily Completed:', this.dailyCompleted);
+      console.log('Daily Completion Rate:', this.dailyCompletionRate);
+
+      // =========================
+      // WEEKLY REPORT
+      // =========================
+      this.weeklyCreated = tasks.filter(t => t.createdAt && isThisWeek(t.createdAt)).length;
+      this.weeklyCompleted = tasks.filter(t => t.completedAt && isThisWeek(t.completedAt)).length;
+      this.weeklyCompletionRate = this.weeklyCreated > 0
+        ? Math.round((this.weeklyCompleted / this.weeklyCreated) * 100)
+        : 0;
+
+      console.log('=== WEEKLY RESULTS ===');
+      console.log('Weekly Created:', this.weeklyCreated);
+      console.log('Weekly Completed:', this.weeklyCompleted);
+      console.log('Weekly Completion Rate:', this.weeklyCompletionRate);
+
+      // =========================
+      // CHARTS
+      // =========================
+      if (this.totalTasks > 0) {
+        if (!this.pieChart) this.createPieChart();
+        else this.updatePieChart();
+
+        const months: string[] = [];
+        const monthlyCounts: number[] = [];
+
+        for (let i = 5; i >= 0; i--) {
+          const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          months.push(date.toLocaleString('default', { month: 'short' }));
+
+          const count = tasks.filter(t => t.completedAt &&
+            t.completedAt.getMonth() === date.getMonth() &&
+            t.completedAt.getFullYear() === date.getFullYear()
+          ).length;
+
+          monthlyCounts.push(count);
         }
-      },
-      error: (error) =>
-        console.error('Error loading progress stats:', error),
-    });
-  }
 
+        if (!this.barChart) this.createBarChart();
+        this.updateBarChart(months, monthlyCounts);
+      }
+
+      // Force Angular to update template
+      this.cdr.detectChanges();
+    },
+    error: (error) => console.error('Error loading progress stats:', error),
+  });
+}
   // ======================
   // PIE CHART
   // ======================
@@ -128,12 +219,11 @@ export class ProgressComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       options: {
         responsive: true,
-        maintainAspectRatio: false, // important for responsive container
+        maintainAspectRatio: false,
         cutout: '65%',
         animation: { duration: 1000 },
         plugins: { legend: { position: 'bottom' } },
       },
-     
     });
   }
 
@@ -168,7 +258,7 @@ export class ProgressComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       options: {
         responsive: true,
-        maintainAspectRatio: false, // important for responsive container
+        maintainAspectRatio: false,
         animation: { duration: 1000 },
         plugins: { legend: { display: false } },
         scales: { y: { beginAtZero: true } },

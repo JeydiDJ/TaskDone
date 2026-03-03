@@ -301,18 +301,14 @@ exports.getProgressStats = async (req, res) => {
         ? Math.round((completedTasks / totalTasks) * 100)
         : 0;
 
-    // For monthly bar chart
-    const tasks = await Task.find({
-      user: userId,
-      completed: true
-    })
-      .select('completedAt -_id')
-      .lean();
+    const tasks = await Task.find({ user: userId })
+  .select('createdAt completedAt deadline -_id')
+  .lean();
 
     successResponse(res, 200, "Progress statistics retrieved successfully", {
       completedTasks,
       pendingTasks,
-      overdueTasks, // 👈 ADD THIS
+      overdueTasks, 
       overallProgress,
       tasks
     });
