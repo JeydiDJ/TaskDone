@@ -1,124 +1,147 @@
-<div class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-    <!-- Background Effects -->
-    <div class="absolute inset-0 opacity-30" style="background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiM2MzY2ZjEiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iNCIvPjwvZz48L2c+PC9zdmc+');"></div>
+<div class="min-h-screen flex items-center justify-center p-6 relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50">
 
-    <!-- Floating Elements -->
-    <div class="absolute top-20 left-10 w-20 h-20 bg-indigo-500/10 rounded-full blur-xl animate-pulse"></div>
-    <div class="absolute bottom-20 right-10 w-32 h-32 bg-purple-500/10 rounded-full blur-xl animate-pulse" style="animation-delay: 2s"></div>
-    <div class="absolute top-1/2 left-1/4 w-16 h-16 bg-pink-500/10 rounded-full blur-xl animate-pulse" style="animation-delay: 4s"></div>
+  <!-- Background Pattern -->
+  <div class="absolute inset-0 opacity-30"
+       style="background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSIjNjM2NmYxIiBmaWxsLW9wYWNpdHk9IjAuMDMiPjxjaXJjbGUgY3g9IjMwIiBjeT0iMzAiIHI9IjQiLz48L2c+PC9zdmc+');">
+  </div>
 
-    <div class="relative w-full max-w-md fade-in">
-        <!-- Main Card -->
-        <div class="bg-white/90 backdrop-blur-md rounded-3xl p-8 shadow-2xl border border-gray-200/50">
-            <!-- Header -->
-            <div class="text-center mb-8">
-                <div class="w-20 h-20 mx-auto mb-4">
-    <img src="assets/taskdone-logo.png" alt="TaskDone Logo" class="w-full h-full object-contain">
-</div>
+  <!-- Floating Blobs -->
+  <div class="absolute top-20 left-10 w-20 h-20 bg-indigo-500/10 rounded-full blur-xl animate-pulse"></div>
+  <div class="absolute bottom-20 right-10 w-32 h-32 bg-purple-500/10 rounded-full blur-xl animate-pulse" style="animation-delay: 2s"></div>
+  <div class="absolute top-1/2 left-1/4 w-16 h-16 bg-pink-500/10 rounded-full blur-xl animate-pulse" style="animation-delay: 4s"></div>
 
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                    Welcome Back
-                </h1>
-                <p class="text-gray-600">Sign in to your account to continue</p>
-            </div>
+  <!-- ================= MAIN CARD ================= -->
+  <div class="relative w-full max-w-5xl fade-in">
 
-            <!-- Error Message -->
-            @if (error()) {
-                <div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl mb-6 flex items-start">
-                    <i class="fas fa-exclamation-circle mt-0.5 mr-3 flex-shrink-0 text-red-500"></i>
-                    <p class="text-sm">{{ error() }}</p>
-                </div>
-            }
+    <div class="relative bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 overflow-hidden grid md:grid-cols-2">
 
-            <!-- Login Form -->
-            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
-                <!-- Email Field -->
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                        Email Address
-                    </label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i class="fas fa-envelope text-gray-400"></i>
-                        </div>
-                        <input id="email" type="text" formControlName="email" name="email"
-                            class="input-field pl-12"
-                            placeholder="you@example.com">
-                    </div>
-                    @if (loginForm.get('email')?.invalid && (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)) {
-                        <div class="text-red-600 text-sm mt-2 flex items-center">
-                            <i class="fas fa-info-circle mr-2"></i>
-                            @if (loginForm.get('email')?.errors?.['required']) {
-                                <span>Email is required</span>
-                            }
-                            @if (loginForm.get('email')?.errors?.['email']) {
-                                <span>Invalid email format</span>
-                            }
-                        </div>
-                    }
-                </div>
+      <!-- ================= LEFT SIDE (FORM) ================= -->
+      <div class="p-10 flex flex-col justify-center relative z-10">
 
-                <!-- Password Field -->
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-                        Password
-                    </label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i class="fas fa-lock text-gray-400"></i>
-                        </div>
-                        <input [type]="showPassword() ? 'text' : 'password'" id="password" formControlName="password"
-                            class="input-field pl-12 pr-12"
-                            placeholder="••••••••">
-                        <button type="button"
-                            class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
-                            (click)="togglePasswordVisibility()">
-                            <i [ngClass]="showPassword() ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-                        </button>
-                    </div>
-                    @if (loginForm.get('password')?.invalid && (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)) {
-                        <div class="text-red-600 text-sm mt-2 flex items-center">
-                            <i class="fas fa-info-circle mr-2"></i>
-                            @if (loginForm.get('password')?.errors?.['required']) {
-                                <span>Password is required</span>
-                            }
-                            @if (loginForm.get('password')?.errors?.['minlength']) {
-                                <span>Password must be at least 6 characters</span>
-                            }
-                        </div>
-                    }
-                </div>
-
-                <!-- Submit Button -->
-                <button type="submit"
-                    class="w-full btn-primary py-3 text-lg flex items-center justify-center group"
-                    [disabled]="loginForm.invalid"
-                    [ngClass]="{ 'opacity-50 cursor-not-allowed': loginForm.invalid }">
-                    <span class="mr-2">Sign in</span>
-                    <i class="fas fa-sign-in-alt group-hover:translate-x-1 transition-transform duration-200"></i>
-                </button>
-            </form>
-
-            <!-- Forgot Password Link -->
-            <div class="text-center mt-4">
-                <a routerLink="/forgot-password" class="text-sm text-indigo-600 hover:text-indigo-800 transition-colors">
-                    Forgot password?
-                </a>
-            </div>
-
-            <!-- Sign Up Link -->
-            <div class="text-center mt-8 pt-6 border-t border-gray-200">
-                <p class="text-gray-600 text-sm">
-                    Don't have an account?
-                    <a routerLink="/register" class="font-medium text-indigo-600 hover:text-indigo-800 transition-colors ml-1">
-                        Sign up now
-                    </a>
-                </p>
-            </div>
+        <!-- Logo -->
+        <div class="w-20 h-20 mb-6">
+          <img src="assets/taskdone-logo.png"
+               alt="TaskDone Logo"
+               class="w-full h-full object-contain">
         </div>
 
-        <!-- Decorative Elements -->
-        <div class="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-full blur-2xl"></div>
-        <div class="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-2xl"></div>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+          Hello!
+        </h1>
+        <p class="text-gray-500 mb-8">
+          Sign in to your account
+        </p>
+
+        <!-- Error Message -->
+        @if (error()) {
+          <div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl mb-6 flex items-start">
+            <i class="fas fa-exclamation-circle mt-0.5 mr-3 text-red-500"></i>
+            <p class="text-sm">{{ error() }}</p>
+          </div>
+        }
+
+        <!-- Login Form -->
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
+
+          <!-- Email -->
+          <div>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                <i class="fas fa-envelope text-gray-400"></i>
+              </div>
+
+              <input type="email"
+                     formControlName="email"
+                     placeholder="Email"
+                     class="w-full pl-12 pr-5 py-3 rounded-full bg-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 transition" />
+            </div>
+
+            @if (loginForm.get('email')?.invalid && (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)) {
+              <div class="text-red-600 text-sm mt-2 flex items-center">
+                <i class="fas fa-info-circle mr-2"></i>
+                @if (loginForm.get('email')?.errors?.['required']) {
+                  <span>Email is required</span>
+                }
+                @if (loginForm.get('email')?.errors?.['email']) {
+                  <span>Invalid email format</span>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Password -->
+          <div>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                <i class="fas fa-lock text-gray-400"></i>
+              </div>
+
+              <input [type]="showPassword() ? 'text' : 'password'"
+                     formControlName="password"
+                     placeholder="Password"
+                     class="w-full pl-12 pr-12 py-3 rounded-full bg-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 transition" />
+
+              <button type="button"
+                      class="absolute inset-y-0 right-0 pr-5 flex items-center text-gray-400 hover:text-gray-600"
+                      (click)="togglePasswordVisibility()">
+                <i [ngClass]="showPassword() ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              </button>
+            </div>
+
+            @if (loginForm.get('password')?.invalid && (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)) {
+              <div class="text-red-600 text-sm mt-2 flex items-center">
+                <i class="fas fa-info-circle mr-2"></i>
+                @if (loginForm.get('password')?.errors?.['required']) {
+                  <span>Password is required</span>
+                }
+                @if (loginForm.get('password')?.errors?.['minlength']) {
+                  <span>Password must be at least 6 characters</span>
+                }
+              </div>
+            }
+          </div>
+
+          <!-- Submit -->
+          <button type="submit"
+                  class="w-full py-3 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold hover:scale-105 transition-transform duration-300 shadow-lg disabled:opacity-50"
+                  [disabled]="loginForm.invalid">
+            Sign In
+          </button>
+
+        </form>
+
+        <!-- Links -->
+        <div class="text-sm text-gray-500 mt-6 flex justify-between">
+          <a routerLink="/forgot-password"
+             class="text-indigo-600 hover:text-indigo-800 transition">
+            Forgot password?
+          </a>
+
+          <a routerLink="/register"
+             class="text-indigo-600 hover:text-indigo-800 transition font-medium">
+            Sign up
+          </a>
+        </div>
+
+      </div>
+
+      <!-- ================= RIGHT SIDE (PURPLE PANEL) ================= -->
+      <div class="relative hidden md:flex items-center justify-center bg-gradient-to-br from-purple-600 to-indigo-700 text-white p-10 overflow-hidden">
+
+        <!-- Curved White Overlay -->
+        <div class="absolute top-0 left-0 w-full h-full bg-white rounded-bl-[180px] opacity-10"></div>
+
+        <div class="relative z-10 text-center max-w-sm">
+          <h2 class="text-3xl font-bold mb-4">
+            Welcome Back!
+          </h2>
+          <p class="text-sm opacity-90">
+            Enter your personal details and continue managing your tasks with TaskDone.
+          </p>
+        </div>
+
+      </div>
+
     </div>
+  </div>
 </div>
