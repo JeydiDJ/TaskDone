@@ -239,6 +239,17 @@ getTaskProgressColor(task: any): string {
   return '#ef4444';                      // red
 }
 
+isTaskNearDeadline(task: Task) {
+  const now = Date.now();
+  const deadline = new Date(task.deadline).getTime();
+  const start = task.startDate ? new Date(task.startDate).getTime() : deadline - 86400000; // fallback 1 day
+  const totalDuration = deadline - start;
+  const timeLeft = deadline - now;
+  const percentLeft = (timeLeft / totalDuration) * 100;
+
+  return percentLeft <= 10 && timeLeft > 0;
+}
+
   // These methods are not currently needed since we're using server-side pagination
   // but kept for potential client-side pagination fallback
   updateCompletedPaginatedTasks() {

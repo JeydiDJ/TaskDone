@@ -110,7 +110,9 @@
                     @else {
                         <ul class="divide-y divide-gray-200">
                             @for (task of pendingPaginatedTasks(); track task._id) {
-                                <li class="py-4 hover:bg-gray-50 transition-colors rounded-lg">
+                                <li class="py-4 hover:bg-gray-50 transition-colors rounded-lg"
+                                [ngClass]="{'animate-pulse-red': isTaskNearDeadline(task)
+                                    }">
                                     <a [routerLink]="['/tasks', task._id]" class="block">
                                         <div class="flex justify-between">
                                             <div class="flex-1">
