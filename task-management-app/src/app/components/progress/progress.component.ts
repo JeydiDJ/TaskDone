@@ -58,12 +58,51 @@ export class ProgressComponent implements OnInit, AfterViewInit, OnDestroy {
   pieChart!: Chart;
   barChart!: Chart;
 
+  quotes: string[] = [
+  "Don't watch the clock; do what it does. Keep going.",
+  "The secret of getting ahead is getting started.",
+  "Progress is progress, no matter how small.",
+  "Dream big. Start small. Act now.",
+  "Success is the sum of small efforts repeated daily.",
+  "Small steps every day lead to big results.",
+  "Do something today that your future self will thank you for.",
+  "Every accomplishment starts with the decision to try.",
+  "Keep going. You’re getting there.",
+  "Great things never come from comfort zones.",
+  "Push yourself because no one else is going to do it for you.",
+  "Focus on progress, not perfection.",
+  "Your only limit is you.",
+  "Don’t wait for opportunity. Create it.",
+  "Believe you can and you’re halfway there.",
+  "Consistency is the key to success.",
+  "The harder you work for something, the greater you’ll feel when you achieve it.",
+  "Strive for progress, not perfection.",
+  "Success doesn’t come from what you do occasionally; it comes from what you do consistently.",
+  "Keep your eyes on the stars, and your feet on the ground.",
+  "What you do today can improve all your tomorrows.",
+  "You don’t have to be perfect to make progress.",
+  "Little by little, a little becomes a lot.",
+  "Don’t stop until you’re proud.",
+  "The best time to start was yesterday. The next best time is now.",
+  "Mistakes are proof that you are trying.",
+  "Success is the result of preparation, hard work, and learning from failure.",
+  "Stay patient and trust your journey.",
+  "You are capable of amazing things.",
+  "Do what you can, with what you have, where you are.",
+  "Your progress is your power."
+];
+
+// Selected quote
+currentQuote: string = "";
+
+
   private resizeListener = () => {
     if (this.pieChart) this.pieChart.resize();
     if (this.barChart) this.barChart.resize();
   };
 
   ngOnInit(): void {
+    this.displayRandomQuote();
     this.loadProgressStats();
   }
 
@@ -75,6 +114,11 @@ export class ProgressComponent implements OnInit, AfterViewInit, OnDestroy {
     window.removeEventListener('resize', this.resizeListener);
   }
 
+displayRandomQuote(): void {
+  const index = Math.floor(Math.random() * this.quotes.length);
+  this.currentQuote = this.quotes[index];
+}
+  
 loadProgressStats(): void {
   this.taskService.getProgressStats().subscribe({
     next: (response) => {
@@ -237,34 +281,67 @@ loadProgressStats(): void {
     this.pieChart.update();
   }
 
-  // ======================
-  // BAR CHART
-  // ======================
-  createBarChart() {
-    if (!this.monthlyCanvas) return;
+ // ======================
+// BAR CHART
+// ======================
+createBarChart() {
+  if (!this.monthlyCanvas) return;
 
-    this.barChart = new Chart(this.monthlyCanvas.nativeElement, {
-      type: 'bar',
-      data: {
-        labels: [],
-        datasets: [
-          {
-            label: 'Tasks Completed',
-            data: [],
-            backgroundColor: '#3b82f6',
-            borderRadius: 6,
+  this.barChart = new Chart(this.monthlyCanvas.nativeElement, {
+    type: 'bar',
+    data: {
+      labels: [], // month labels will be filled later
+      datasets: [
+        {
+          label: 'Tasks Completed', // This will appear in the legend
+          data: [],
+          backgroundColor: '#3b82f6',
+          borderRadius: 6,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 1000 },
+      plugins: {
+        legend: {
+          display: true,           // show the legend
+          position: 'top',         // position above the chart
+          labels: {
+            font: {
+              size: 14,           // increase font size for readability
+              weight: 'bold',
+            },
+            color: '#374151',     // dark gray color for text
           },
-        ],
+        },
+        tooltip: {
+          enabled: true,          // show tooltip on hover
+        },
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: { duration: 1000 },
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true } },
+      scales: {
+        y: { 
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Tasks Completed',
+            color: '#374151',
+            font: { size: 14, weight: 'bold' },
+          },
+        },
+        x: {
+          title: {
+            display: true,
+            text: 'Month',
+            color: '#374151',
+            font: { size: 14, weight: 'bold' },
+          },
+        },
       },
-    });
-  }
+    },
+  });
+}
 
   updateBarChart(labels: string[], data: number[]) {
     if (!this.barChart) return;
