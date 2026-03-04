@@ -61,6 +61,9 @@ export class TaskListComponent implements OnInit {
   hasCheckedOverdue = false;
   closingOverdueAlert = signal<boolean>(false);
 
+  progressMap: Record<string, number> = {};
+  colorMap: Record<string, string> = {};
+
   constructor() {
      effect(() => {
     if (this.showOverdueAlert()) {
@@ -94,11 +97,43 @@ export class TaskListComponent implements OnInit {
     }, 1000);
 
     setInterval(() => {
-  // Update each task array to itself to trigger signal reactivity
-  this.pendingTasks.update(tasks => [...tasks]);
-  this.unfinishedTasks.update(tasks => [...tasks]);
-  this.completedTasks.update(tasks => [...tasks]);
+  const now = Date.now();
+
+  this.pendingTasks.update(tasks => {
+    return tasks.map(task => {
+      this.calculateTaskProgress(task, now);
+      return task;
+    });
+  });
+
+  this.unfinishedTasks.update(tasks => {
+    return tasks.map(task => {
+      this.calculateTaskProgress(task, now);
+      return task;
+    });
+  });
+
+  this.completedTasks.update(tasks => {
+    return tasks.map(task => {
+      this.calculateTaskProgress(task, now);
+      return task;
+    });
+  });
 }, 1000);
+}
+  calculateTaskProgress(task: any, now: number) {
+  const created = new Date(task.createdAt).getTime();
+  const deadline = new Date(task.deadline).getTime();
+  const totalDuration = deadline - created;
+  const elapsed = now - created;
+
+  const progress = Math.max(0, Math.min(100, ((totalDuration - elapsed) / totalDuration) * 100));
+  this.progressMap[task._id] = progress;
+
+  // Color
+  if (progress > 50) this.colorMap[task._id] = '#10b981'; // green
+  else if (progress > 20) this.colorMap[task._id] = '#f59e0b'; // yellow
+  else this.colorMap[task._id] = '#ef4444'; // red
 }
 
   loadCompletedTasks(page: number, limit: number) {

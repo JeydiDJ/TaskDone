@@ -132,15 +132,13 @@
                                                 </span>
                                             </div>
                                         </div>
-                                        <div class="mt-3 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                                            <div
-                                                class="h-2 rounded-full transition-all duration-500"
-                                                [ngStyle]="{
-                                                'width': getTaskProgress(task) + '%',
-                                                'background-color': getTaskProgressColor(task)
-                                                }"
-                                            ></div>
-                                        </div>
+                                      <div class="mt-3 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+  <div
+    class="h-2 rounded-full transition-all duration-500"
+    [style.width.%]="progressMap[task._id]"
+    [style.background-color]="colorMap[task._id]"
+  ></div>
+</div>
                                     </a>
                                 </li>
                             }

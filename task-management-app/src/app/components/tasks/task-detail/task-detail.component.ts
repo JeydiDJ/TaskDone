@@ -45,6 +45,8 @@ export class TaskDetailComponent implements OnInit {
     return 'In Progress';
   }
 
+  
+
   isOverdue() {
     const currentTask = this.task();
     if (!currentTask || currentTask.completed) return false;
@@ -88,10 +90,31 @@ export class TaskDetailComponent implements OnInit {
   constructor() {}
 
   ngOnInit() {
-    this.loading.set(true);
-    const id = this.route.snapshot.paramMap.get('id') || '';
-    this.loadTaskDetails(id);
+  this.loading.set(true);
+  const id = this.route.snapshot.paramMap.get('id') || '';
+
+  // Load current task
+  this.loadTaskDetails(id);
+
+  // Load all tasks for pending check
+  this.taskService.getAllTasks().subscribe({
+  next: (response) => {
+    // Ensure it's an array
+    if (Array.isArray(response.data)) {
+      this.allTasks.set(response.data);
+    } else if (response.data && Array.isArray(response.data.tasks)) {
+      // fallback if the API nests the array in `tasks`
+      this.allTasks.set(response.data.tasks);
+    } else {
+      console.warn('Unexpected API response for allTasks:', response.data);
+      this.allTasks.set([]);
+    }
+  },
+  error: (err) => {
+    console.error('Error loading all tasks:', err);
   }
+});
+}
 
   loadTaskDetails(id: string) {
     this.taskService.getTaskById(id).subscribe({
