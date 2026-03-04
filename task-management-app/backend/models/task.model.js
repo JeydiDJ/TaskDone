@@ -89,6 +89,12 @@ const taskSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+
+  mood: {
+    emoji: { type: String }, 
+    note: { type: String }   
+  },
+
 }, { timestamps: true });
 
 const Task = mongoose.model('Task', taskSchema);

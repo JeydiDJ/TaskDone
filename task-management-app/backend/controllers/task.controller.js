@@ -198,6 +198,7 @@ exports.getTaskById = async (req, res) => {
 };
 
 // Update a task
+// Update a task
 exports.updateTask = async (req, res) => {
   try {
     const { id } = req.params;
@@ -213,14 +214,26 @@ exports.updateTask = async (req, res) => {
       });
     }
 
-    // If marking as completed for the first time
+    // Handle completion + completedAt
     if (updateData.completed === true && !task.completed) {
       updateData.completedAt = new Date();
     }
-
-    // If marking as NOT completed
     if (updateData.completed === false && task.completed) {
       updateData.completedAt = null;
+    }
+
+    // Handle mood (optional)
+    if (updateData.mood) {
+      // Validate emoji (optional)
+      const validEmojis = ['😃','🙂','😐','😔','😢'];
+      if (!validEmojis.includes(updateData.mood.emoji)) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Invalid mood emoji'
+        });
+      }
+      // Ensure note is string
+      updateData.mood.note = updateData.mood.note || '';
     }
 
     const updatedTask = await Task.findByIdAndUpdate(

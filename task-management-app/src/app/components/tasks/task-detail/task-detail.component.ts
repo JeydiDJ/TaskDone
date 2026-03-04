@@ -3,10 +3,11 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TaskService } from '../../../services/task.service';
 import { DatePipe, NgClass, CommonModule, NgFor, NgIf } from '@angular/common';
 import { Location } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'app-task-detail',
-    imports: [DatePipe, NgClass, RouterLink, CommonModule, NgIf, NgFor],
+    imports: [DatePipe, NgClass, RouterLink, CommonModule, NgIf, NgFor, FormsModule],
     standalone: true,
     templateUrl: './task-detail.component.html',
 })
@@ -18,6 +19,8 @@ export class TaskDetailComponent implements OnInit {
   deleting = signal<boolean>(false);
   showCongratsModal = signal(false);
   autoClosing = signal(false);
+  mood = signal<string | null>(null);
+  moodNote = signal<string>('');
   allTasks = signal<any[]>([]);
   unfinishedTasks = computed(() =>
   this.allTasks().filter(t => !t.completed && t._id !== this.task()?._id)
@@ -115,9 +118,10 @@ export class TaskDetailComponent implements OnInit {
 
   this.loading.set(true);
   const taskId = this.task()._id;
+
+  // Only mark completed; do NOT send mood yet
   const updatedTask = { completed: true };
 
-  // Mark task as complete in backend
   this.taskService.updateTask(taskId, updatedTask).subscribe({
     next: (response) => {
       if (response?.data) {
@@ -127,35 +131,8 @@ export class TaskDetailComponent implements OnInit {
 
       this.loading.set(false);
 
-      // Fetch all tasks from backend
-      this.taskService.getAllTasks().subscribe({
-        next: (tasksResponse) => {
-          // Correctly read the tasks array from data.tasks
-          const tasksArray: any[] = tasksResponse?.data?.tasks ?? [];
-
-          // Mark the just-completed task as completed locally
-          const updatedTasks = tasksArray.map(t =>
-            t._id === this.task()?._id ? { ...t, completed: true } : t
-          );
-
-          this.allTasks.set(updatedTasks);
-
-          console.log('All tasks after update:', updatedTasks);
-          console.log('Unfinished tasks:', this.unfinishedTasks());
-
-          // Show modal
-          this.showCongratsModal.set(true);
-
-          // Auto-close after 5 seconds
-          setTimeout(() => this.closeCongratsModal(), 5000);
-        },
-        error: (err) => {
-          console.error('Error fetching tasks:', err);
-          this.allTasks.set([]);
-          this.showCongratsModal.set(true);
-          setTimeout(() => this.closeCongratsModal(), 5000);
-        }
-      });
+      // Show the modal for mood selection
+      this.showCongratsModal.set(true);
     },
     error: (error) => {
       console.error('Error completing task:', error);
@@ -165,9 +142,42 @@ export class TaskDetailComponent implements OnInit {
   });
 }
 
+submitMood() {
+  if (!this.task()?._id) return;
 
+  const validEmojis = ['😃','🙂','😐','😔','😢'];
+  const selectedMood = this.mood()?.trim();
 
+  if (!selectedMood || !validEmojis.includes(selectedMood)) {
+    alert('Please select a valid mood emoji');
+    return;
+  }
 
+  const updatedTask: any = {
+    mood: {
+      emoji: selectedMood,
+      note: this.moodNote()?.trim() || ''
+    }
+  };
+
+  this.taskService.updateTask(this.task()._id, updatedTask).subscribe({
+    next: (response) => {
+      console.log('Mood saved:', response.data);
+      this.task.set(response.data);
+
+      // Optionally close modal or show confirmation
+      this.showCongratsModal.set(false);
+
+      // Reset mood signals
+      this.mood.set(null);
+      this.moodNote.set('');
+    },
+    error: (err) => {
+      console.error('Error saving mood:', err);
+      alert('Failed to save mood. Try again.');
+    }
+  });
+}
 
   editTask() {
     if (!this.task()?._id) {
@@ -200,7 +210,46 @@ export class TaskDetailComponent implements OnInit {
       });
     }
   }
+  saveMoodAndClose() {
+  if (!this.task()?._id) return;
 
+  const validEmojis = ['😃','🙂','😐','😔','😢'];
+  const selectedMood = this.mood()?.trim();
+
+  if (!selectedMood || !validEmojis.includes(selectedMood)) {
+    alert('Please select a valid mood emoji');
+    return;
+  }
+
+  const updatedTask: any = {
+    mood: {
+      emoji: selectedMood,
+      note: this.moodNote()?.trim() || ''
+    }
+  };
+
+  // Call backend to save mood
+  this.taskService.updateTask(this.task()._id, updatedTask).subscribe({
+    next: (response) => {
+      console.log('Mood saved:', response.data);
+      this.task.set(response.data);
+
+      // Reset mood signals
+      this.mood.set(null);
+      this.moodNote.set('');
+
+      // Close modal after successful save
+      this.closeCongratsModal();
+    },
+    error: (err) => {
+      console.error('Error saving mood:', err);
+      alert('Failed to save mood. Try again.');
+
+      // Optional: still close modal if you want
+      this.closeCongratsModal();
+    }
+  });
+}
   closeCongratsModal() {
     this.autoClosing.set(true);
     setTimeout(() => {
