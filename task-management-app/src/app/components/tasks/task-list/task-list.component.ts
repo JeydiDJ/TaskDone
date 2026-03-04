@@ -2,13 +2,13 @@ import { Component, inject, OnInit, signal, OnDestroy } from '@angular/core';
 import { TaskService } from '../../../services/task.service';
 import { Task } from '../../../core/models/tasks.model';
 import { RouterLink, ActivatedRoute } from '@angular/router';
-import { NgClass, DatePipe, NgIf, NgFor } from '@angular/common';
+import { NgClass, DatePipe, NgIf, NgFor, CommonModule } from '@angular/common';
 import { AuthService } from '../../../services/auth.service';
 import { effect } from '@angular/core';
 
 @Component({
     selector: 'app-task-list',
-    imports: [RouterLink, NgClass, DatePipe, NgIf, NgFor],
+    imports: [RouterLink, NgClass, DatePipe, NgIf, NgFor, CommonModule],
     templateUrl: './task-list.component.html',
 })
 export class TaskListComponent implements OnInit {
@@ -92,7 +92,14 @@ export class TaskListComponent implements OnInit {
     setTimeout(() => {
       this.checkReminders();
     }, 1000);
-  }
+
+    setInterval(() => {
+  // Update each task array to itself to trigger signal reactivity
+  this.pendingTasks.update(tasks => [...tasks]);
+  this.unfinishedTasks.update(tasks => [...tasks]);
+  this.completedTasks.update(tasks => [...tasks]);
+}, 1000);
+}
 
   loadCompletedTasks(page: number, limit: number) {
     this.completedLoading.set(true);
@@ -209,6 +216,28 @@ export class TaskListComponent implements OnInit {
       },
     });
   }
+
+  // Returns progress percentage (100% = just created, 0% = deadline reached)
+getTaskProgress(task: any): number {
+  const now = new Date().getTime();
+  const created = new Date(task.createdAt).getTime();
+  const deadline = new Date(task.deadline).getTime();
+
+  if (now >= deadline) return 0;
+
+  const totalDuration = deadline - created;
+  const elapsed = now - created;
+
+  return Math.max(0, Math.min(100, ((totalDuration - elapsed) / totalDuration) * 100));
+}
+
+// Returns color based on remaining time
+getTaskProgressColor(task: any): string {
+  const progress = this.getTaskProgress(task);
+  if (progress > 50) return '#10b981';   // green
+  if (progress > 20) return '#f59e0b';   // yellow
+  return '#ef4444';                      // red
+}
 
   // These methods are not currently needed since we're using server-side pagination
   // but kept for potential client-side pagination fallback
