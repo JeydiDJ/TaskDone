@@ -9,6 +9,7 @@ import {
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { NgClass, CommonModule } from '@angular/common';
+import { AbstractControl } from '@angular/forms';
 
 @Component({
   selector: 'app-register',
@@ -27,19 +28,39 @@ export class RegisterComponent {
   fb = inject(FormBuilder);
 
   constructor() {
-    this.registerForm = this.fb.group({
+  this.registerForm = this.fb.group(
+    {
       email: new FormControl('', [Validators.required, Validators.email]),
+
       password: new FormControl('', [
         Validators.required,
         Validators.minLength(6),
         Validators.maxLength(20),
       ]),
-    });
-  }
+
+      confirmPassword: new FormControl('', [
+        Validators.required,
+      ]),
+    },
+    { validators: this.passwordMatchValidator }
+  );
+}
+
 
   togglePasswordVisibility(): void {
     this.showPassword.update((state) => !state);
   }
+
+  passwordMatchValidator(control: AbstractControl) {
+  const password = control.get('password')?.value;
+  const confirmPassword = control.get('confirmPassword')?.value;
+
+  if (password !== confirmPassword) {
+    return { passwordMismatch: true };
+  }
+
+  return null;
+}
 
   onSubmit() {
     if (this.registerForm.invalid) {
