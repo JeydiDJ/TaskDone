@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { UsersService } from '../../services/users.service';
+import { TaskService } from '../../services/task.service';
 import { BadgeService } from '../../services/badge.service';
 import { DatePipe, NgIf, CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
@@ -23,10 +24,14 @@ export class ProfileComponent implements OnInit {
   auth = inject(AuthService);
   router = inject(Router);
   badgeService = inject(BadgeService);
+  
+  completedTasksCount: number = 0;
+  taskService = inject(TaskService);
 
   ngOnInit() {
     this.getProfile();
     this.loadUserBadges();
+    this.loadCompletedTasksCount();
   }
 
   logout() {
@@ -61,6 +66,26 @@ export class ProfileComponent implements OnInit {
       },
     });
   }
+
+  async loadCompletedTasksCount() {
+  try {
+    const currentUser = this.auth.getCurrentUser();
+    if (!currentUser?._id) return;
+
+    const result: any = await firstValueFrom(this.taskService.getCompletedTasks(1, 1000));
+
+    // Tasks are inside result.data.tasks
+    const tasks: any[] = Array.isArray(result?.data?.tasks) ? result.data.tasks : [];
+
+    // Filter using the correct field: task.user
+    this.completedTasksCount = tasks.filter(task => task.user === currentUser._id).length;
+
+    console.log('Completed tasks for user', this.completedTasksCount, tasks);
+
+  } catch (err) {
+    console.error('Error loading completed tasks', err);
+  }
+}
 
   async loadUserBadges() {
     const userId = this.auth.getCurrentUser()?._id;

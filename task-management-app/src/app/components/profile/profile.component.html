@@ -1,69 +1,87 @@
-<div class="max-w-xl mx-auto m-12 bg-white rounded-2xl shadow-lg p-10">
-  <div class="flex items-center mb-8">
-    <div class="h-20 w-20 rounded-full bg-blue-100 flex items-center justify-center mr-6">
+<div class="max-w-xl mx-auto my-12 bg-white rounded-2xl shadow-xl overflow-hidden">
+  <!-- Profile Header -->
+  <div class="relative bg-gradient-to-r from-blue-500 to-indigo-600 h-36 flex items-center px-6">
+    <!-- Avatar -->
+    <div class="absolute -bottom-10 left-6 h-20 w-20 rounded-full bg-white flex items-center justify-center shadow-lg">
       <i class="fas fa-user-circle text-blue-500 text-5xl"></i>
     </div>
-    <div>
-      <h2 class="text-3xl font-bold text-gray-800 mb-1">My Profile</h2>
-      <p class="text-gray-500">{{ profile?.email }}</p>
+
+    <!-- Name & Email -->
+    <div class="ml-28 text-white">
+      <h2 class="text-3xl font-bold mb-1">My Profile</h2>
+      <p class="text-sm opacity-90">{{ profile?.email }}</p>
     </div>
   </div>
 
-  <!-- Loading / Error States -->
-  <div *ngIf="loading" class="flex justify-center py-8">
-    <div class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-  </div>
-  <div *ngIf="!loading && error" class="text-red-500 mb-4 text-center">{{ error }}</div>
+  <!-- Profile Content -->
+  <div class="px-6 pt-16 pb-10">
+    <!-- Loading / Error States -->
+    <div *ngIf="loading" class="flex justify-center py-8">
+      <div class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+    </div>
+    <div *ngIf="!loading && error" class="text-red-500 mb-4 text-center">{{ error }}</div>
 
-  <div *ngIf="!loading && profile">
-    <!-- Member Info -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-      <div>
-        <div class="text-xs text-gray-400 uppercase mb-1">Member Since</div>
-        <div class="text-lg text-gray-800">{{ profile?.createdAt | date:'mediumDate' }}</div>
+    <!-- Member Info Cards -->
+    <div *ngIf="!loading && profile" class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+      <div class="bg-blue-50 p-4 rounded-xl flex items-center space-x-4 shadow-sm">
+        <i class="fas fa-calendar-alt text-blue-500 text-2xl"></i>
+        <div>
+          <div class="text-xs text-gray-400 uppercase">Member Since</div>
+          <div class="text-lg font-semibold text-gray-800">{{ profile?.createdAt | date:'mediumDate' }}</div>
+        </div>
+      </div>
+      <div class="bg-green-50 p-4 rounded-xl flex items-center space-x-4 shadow-sm">
+        <i class="fas fa-tasks text-green-500 text-2xl"></i>
+        <div>
+          <div class="text-xs text-gray-400 uppercase">Tasks Completed</div>
+          <div class="text-lg font-semibold text-gray-800">{{ completedTasksCount }}</div>
+        </div>
       </div>
     </div>
 
     <!-- Badges Section -->
-<div class="mt-8 pt-6 border-t border-gray-200">
-  <h3 class="text-lg font-semibold text-gray-800 mb-4">My Badges</h3>
+    <div class="mt-8 pt-6 border-t border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4">My Badges</h3>
 
-  <!-- Loading Spinner -->
-  <div *ngIf="badgesLoading" class="flex justify-center py-6">
-    <div class="w-10 h-10 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
-  </div>
+      <!-- Loading Spinner -->
+      <div *ngIf="badgesLoading" class="flex justify-center py-6">
+        <div class="w-10 h-10 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
 
-  <!-- No badges message -->
-  <div *ngIf="!badgesLoading && badges.length === 0" class="text-gray-500 text-center py-6">
-    You haven’t earned any badges yet. Complete tasks to earn them!
-  </div>
+      <!-- No badges message -->
+      <div *ngIf="!badgesLoading && badges.length === 0" class="text-gray-500 text-center py-6">
+        You haven’t earned any badges yet. Complete tasks to earn them!
+      </div>
 
-  <!-- Badge cards -->
-  <div *ngIf="!badgesLoading && badges.length > 0" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-    <div *ngFor="let badge of badges"
-         class="flex flex-col items-center justify-center p-4 rounded-2xl shadow-md transition-transform transform hover:scale-105 hover:shadow-xl"
-         [ngClass]="getBadgeCardClass(badge.milestone)">
-      <!-- Icon from backend -->
-      <div class="text-4xl mb-2">{{ badge.icon }}</div>
+      <!-- Badge cards -->
+      <div *ngIf="!badgesLoading && badges.length > 0" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div *ngFor="let badge of badges"
+             class="flex flex-col items-center justify-center p-5 rounded-3xl shadow-md transition-transform transform hover:scale-110 hover:shadow-xl bg-gradient-to-tr from-white to-gray-50 relative">
+          <!-- Glow for high milestone badges -->
+          <div *ngIf="badge.milestone >= 5" class="absolute -inset-1 rounded-3xl bg-yellow-200 opacity-20 blur-xl"></div>
 
-      <!-- Badge name and milestone -->
-      <div class="text-center">
-        <p class="font-semibold text-gray-800 text-sm">{{ badge.name }}</p>
-        <p class="text-gray-400 text-xs">Milestone: {{ badge.milestone }}</p>
+          <!-- Badge Icon -->
+          <div class="text-5xl mb-2 animate-bounce">{{ badge.icon }}</div>
+
+          <!-- Badge Name & Milestone -->
+          <div class="text-center">
+            <p class="font-semibold text-gray-800 text-sm">{{ badge.name }}</p>
+            <p class="text-gray-400 text-xs">Milestone: {{ badge.milestone }}</p>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
-    <!-- Actions -->
-    <div class="mt-8 pt-6 border-t border-gray-200">
-      <div class="flex space-x-4">
-        <button (click)="deleteAccount()" class="bg-red-500 hover:bg-red-700 text-white px-6 py-3 rounded-md transition-colors duration-200 font-medium">
-          <i class="fas fa-trash-alt mr-2"></i> Delete Account
-        </button>
-        <button (click)="logout()" class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-md transition-colors duration-200 font-medium">
-          <i class="fas fa-sign-out-alt mr-2"></i> Logout
-        </button>
-      </div>
+
+    <!-- Action Buttons -->
+    <div class="mt-8 pt-6 border-t border-gray-200 flex flex-col sm:flex-row justify-center sm:justify-start gap-4">
+      <button (click)="deleteAccount()" 
+              class="bg-red-500 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors font-medium flex items-center justify-center">
+        <i class="fas fa-trash-alt mr-2"></i> Delete Account
+      </button>
+      <button (click)="logout()" 
+              class="bg-gray-700 hover:bg-gray-900 text-white px-6 py-3 rounded-lg transition-colors font-medium flex items-center justify-center">
+        <i class="fas fa-sign-out-alt mr-2"></i> Logout
+      </button>
     </div>
   </div>
 </div>
