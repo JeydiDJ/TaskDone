@@ -5,37 +5,65 @@
     </div>
     <div>
       <h2 class="text-3xl font-bold text-gray-800 mb-1">My Profile</h2>
-      <p class="text-gray-500">{{ profile()?.email }}</p>
+      <p class="text-gray-500">{{ profile?.email }}</p>
     </div>
   </div>
 
-  @if (loading()) {
-    <div class="flex justify-center py-8">
-      <div class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-    </div>
-  }
-  @else if (error()) {
-    <div class="text-red-500 mb-4 text-center">{{ error() }}</div>
-  }
-  @else if (profile()) {
+  <!-- Loading / Error States -->
+  <div *ngIf="loading" class="flex justify-center py-8">
+    <div class="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+  </div>
+  <div *ngIf="!loading && error" class="text-red-500 mb-4 text-center">{{ error }}</div>
+
+  <div *ngIf="!loading && profile">
+    <!-- Member Info -->
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
       <div>
         <div class="text-xs text-gray-400 uppercase mb-1">Member Since</div>
-        <div class="text-lg text-gray-800">{{ profile()?.createdAt | date:'mediumDate' }}</div>
+        <div class="text-lg text-gray-800">{{ profile?.createdAt | date:'mediumDate' }}</div>
       </div>
     </div>
 
+    <!-- Badges Section -->
+<div class="mt-8 pt-6 border-t border-gray-200">
+  <h3 class="text-lg font-semibold text-gray-800 mb-4">My Badges</h3>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="badgesLoading" class="flex justify-center py-6">
+    <div class="w-10 h-10 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
+  </div>
+
+  <!-- No badges message -->
+  <div *ngIf="!badgesLoading && badges.length === 0" class="text-gray-500 text-center py-6">
+    You haven’t earned any badges yet. Complete tasks to earn them!
+  </div>
+
+  <!-- Badge cards -->
+  <div *ngIf="!badgesLoading && badges.length > 0" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+    <div *ngFor="let badge of badges"
+         class="flex flex-col items-center justify-center p-4 rounded-2xl shadow-md transition-transform transform hover:scale-105 hover:shadow-xl"
+         [ngClass]="getBadgeCardClass(badge.milestone)">
+      <!-- Icon from backend -->
+      <div class="text-4xl mb-2">{{ badge.icon }}</div>
+
+      <!-- Badge name and milestone -->
+      <div class="text-center">
+        <p class="font-semibold text-gray-800 text-sm">{{ badge.name }}</p>
+        <p class="text-gray-400 text-xs">Milestone: {{ badge.milestone }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+    <!-- Actions -->
     <div class="mt-8 pt-6 border-t border-gray-200">
       <div class="flex space-x-4">
-        <button (click)="deleteAccount()"
-          class="bg-red-500 hover:bg-red-700 text-white px-6 py-3 rounded-md transition-colors duration-200 font-medium">
+        <button (click)="deleteAccount()" class="bg-red-500 hover:bg-red-700 text-white px-6 py-3 rounded-md transition-colors duration-200 font-medium">
           <i class="fas fa-trash-alt mr-2"></i> Delete Account
         </button>
-        <button (click)="logout()"
-          class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-md transition-colors duration-200 font-medium">
+        <button (click)="logout()" class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-md transition-colors duration-200 font-medium">
           <i class="fas fa-sign-out-alt mr-2"></i> Logout
         </button>
       </div>
     </div>
-  }
+  </div>
 </div>
