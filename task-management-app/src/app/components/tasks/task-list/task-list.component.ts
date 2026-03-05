@@ -2,13 +2,14 @@ import { Component, inject, OnInit, signal, OnDestroy } from '@angular/core';
 import { TaskService } from '../../../services/task.service';
 import { Task } from '../../../core/models/tasks.model';
 import { RouterLink, ActivatedRoute } from '@angular/router';
-import { NgClass, DatePipe, NgIf, NgFor, CommonModule } from '@angular/common';
+import { NgClass, DatePipe, NgIf, NgFor, CommonModule} from '@angular/common';
 import { AuthService } from '../../../services/auth.service';
 import { BadgeService } from '../../../services/badge.service';
 import { effect } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { User } from '../../../core/models/user.model';
+import { FormsModule } from '@angular/forms';
 
 function isUser(u: User | null): u is User {
   return !!u && !!u._id;
@@ -16,7 +17,7 @@ function isUser(u: User | null): u is User {
 
 @Component({
     selector: 'app-task-list',
-    imports: [RouterLink, NgClass, DatePipe, NgIf, NgFor, CommonModule],
+    imports: [RouterLink, NgClass, DatePipe, NgIf, NgFor, CommonModule, FormsModule],
     templateUrl: './task-list.component.html',
 })
 export class TaskListComponent implements OnInit {
@@ -31,6 +32,8 @@ export class TaskListComponent implements OnInit {
   completedPaginatedTasks = signal<Task[]>([]);
   pendingPaginatedTasks = signal<Task[]>([]);
   unfinishedPaginatedTasks = signal<Task[]>([]);
+  ongoingSortType: 'deadline' | 'priority' | 'alphabetical' = 'deadline';
+  ongoingSortOrder: 'asc' | 'desc' = 'asc';
 
   completedCurrentPage = signal<number>(1);
   pendingCurrentPage = signal<number>(1);
@@ -344,6 +347,30 @@ isTaskNearDeadline(task: Task) {
       this.pendingTasks().slice(startIndex, endIndex)
     );
   }
+toggleSortOrder() {
+  this.ongoingSortOrder = this.ongoingSortOrder === 'asc' ? 'desc' : 'asc';
+}
+
+getSortedPendingTasks() {
+  const tasks = [...this.pendingTasks()];
+  let sorted = tasks;
+
+  switch (this.ongoingSortType) {
+    case 'deadline':
+      sorted = tasks.sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
+      break;
+    case 'priority':
+      const priorityOrder: any = { High: 1, Medium: 2, Low: 3 };
+      sorted = tasks.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+      break;
+    case 'alphabetical':
+      sorted = tasks.sort((a, b) => a.title.localeCompare(b.title));
+      break;
+  }
+
+  if (this.ongoingSortOrder === 'desc') sorted.reverse();
+  return sorted;
+}
 
   checkOverdueTasks() {
   if (this.hasCheckedOverdue) return;

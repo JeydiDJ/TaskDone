@@ -20,8 +20,8 @@ export interface Task {
   priority: string
   completed: boolean
   user: User | string
-  createdAt?: string
-  updatedAt?: string
+  createdAt?: string | number
+  updatedAt?: string | number
   __v: number
 }
 
