@@ -73,208 +73,276 @@
     </div>
   }
 
-  <!-- Task Columns -->
-  @else {
-    <div class="grid md:grid-cols-3 gap-8">
-<!-- Pending Tasks -->
-<div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-  <div class="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 flex items-center justify-between">
-    
-    <!-- Header Title -->
-    <h3 class="text-xl font-bold text-white flex items-center">
-      <i class="fas fa-spinner mr-2 animate-spin"></i> Ongoing
-      <span class="ml-2 bg-white bg-opacity-20 text-white text-sm py-1 px-3 rounded-full font-medium">{{ pendingTasks().length }}</span>
-    </h3>
+ <!-- Task Columns -->
+<div class="grid md:grid-cols-3 gap-8">
 
-    <!-- Sorting Controls -->
-    <div class="flex items-center space-x-2 text-sm font-medium text-white">
-      
-      <!-- Sort Type Dropdown -->
-      <div class="relative">
-        <select
-          [(ngModel)]="ongoingSortType"
-          class="appearance-none bg-white bg-opacity-10 text-gray-900 pl-4 pr-6 py-1 rounded-md border border-white border-opacity-20 focus:outline-none focus:ring-1 focus:ring-white shadow-inner"
+  <!-- Pending Tasks -->
+  <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+    <div class="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 flex items-center justify-between">
+      <h3 class="text-xl font-bold text-white flex items-center">
+        <i class="fas fa-spinner mr-2 animate-spin"></i> Ongoing
+        <span class="ml-2 bg-white bg-opacity-20 text-white text-sm py-1 px-3 rounded-full font-medium">{{ pendingTotalTasks()}}</span>
+      </h3>
+
+      <!-- Sorting Controls -->
+      <div class="flex items-center space-x-2 text-sm font-medium text-white">
+        <div class="relative">
+          <select
+            [(ngModel)]="ongoingSortType"
+            class="appearance-none bg-white bg-opacity-10 text-gray-900 pl-4 pr-6 py-1 rounded-md border border-white border-opacity-20 focus:outline-none focus:ring-1 focus:ring-white shadow-inner"
+          >
+            <option class="text-gray-900" value="deadline">Deadline</option>
+            <option class="text-gray-900" value="priority">Priority</option>
+            <option class="text-gray-900" value="alphabetical">A → Z</option>
+          </select>
+          <i class="fas fa-chevron-down absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none text-white text-xs"></i>
+        </div>
+
+        <button
+          (click)="toggleSortOrder()"
+          class="flex items-center justify-center w-6 h-6 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition"
+          title="Toggle ascending/descending"
         >
-          <option class="text-gray-900" value="deadline">Deadline</option>
-          <option class="text-gray-900" value="priority">Priority</option>
-          <option class="text-gray-900" value="alphabetical">A → Z</option>
-        </select>
-        <!-- Small down arrow -->
-        <i class="fas fa-chevron-down absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none text-white text-xs"></i>
+          <span class="text-white text-xs">{{ ongoingSortOrder === 'asc' ? '↑' : '↓' }}</span>
+        </button>
       </div>
+    </div>
 
-      <!-- Ascending / Descending Toggle -->
-      <button
-  (click)="toggleSortOrder()"
-  class="flex items-center justify-center w-6 h-6 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition"
-  title="Toggle ascending/descending"
->
-  <span class="text-white text-xs">
-    {{ ongoingSortOrder === 'asc' ? '↑' : '↓' }}
+    <div class="p-6">
+      @if(pendingLoading()) {
+        <div class="flex justify-center p-8">
+          <div class="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      }
+      @else if(pendingTasks().length === 0) {
+        <div class="flex flex-col items-center justify-center p-8 text-center space-y-4">
+          <div class="bg-indigo-100 p-4 rounded-3xl">
+            <i class="fas fa-check text-indigo-600 text-2xl"></i>
+          </div>
+          <p class="text-gray-600 font-medium">No pending tasks</p>
+          <a routerLink="/tasks/new" class="text-indigo-600 hover:text-indigo-800 underline font-medium">Create a new task</a>
+        </div>
+      }
+      @else {
+        <ul class="divide-y divide-gray-200">
+          @for (task of getSortedPendingTasks(); track task._id) {
+            <li class="mb-2">
+              <a [routerLink]="['/tasks', task._id]" class="block w-full p-4 rounded-lg hover:bg-gray-50 hover:shadow-md transition-all"
+                 [ngClass]="{'animate-pulse-red': isTaskNearDeadline(task)}">
+                <div class="flex justify-between items-start">
+                  <div class="flex-1">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-1">{{ task.title }}</h4>
+                    <p class="text-gray-500 text-sm truncate max-w-md">{{ task.description }}</p>
+                  </div>
+                  <div class="flex flex-col items-end ml-4 space-y-2">
+                    <span [ngClass]="{
+                      'bg-red-100 text-red-800': task.priority === 'High',
+                      'bg-yellow-100 text-yellow-800': task.priority === 'Medium',
+                      'bg-green-100 text-green-800': task.priority === 'Low'
+                    }" class="px-3 py-1 rounded-full text-xs font-medium">{{ task.priority }}</span>
+                    <span class="text-xs text-gray-500 flex items-center">
+                      <i class="far fa-calendar mr-1"></i> {{ task.deadline | date:'mediumDate' }}
+                    </span>
+                  </div>
+                </div>
+                <div class="mt-3 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                  <div class="h-2 rounded-full transition-all duration-500"
+                       [style.width.%]="progressMap[task._id]"
+                       [style.background-color]="colorMap[task._id]"></div>
+                </div>
+              </a>
+            </li>
+          }
+        </ul>
+ <!-- Minimalist Pagination with FA Arrows -->
+<div *ngIf="pendingTotalTasks() > pendingItemsPerPage()" class="flex items-center justify-between mt-4 text-gray-500 text-sm">
+  
+  <!-- Left arrow -->
+  <button 
+    (click)="previousPendingPage()" 
+    [disabled]="pendingCurrentPage() === 1"
+    class="text-gray-400 hover:text-gray-700 transition"
+    aria-label="Previous page"
+  >
+    <i class="fas fa-chevron-left"></i>
+  </button>
+
+  <!-- Current page info -->
+  <span class="text-gray-500">
+    Page {{ pendingCurrentPage() }} of {{ pendingTotalPages() }}
   </span>
-</button>
-    </div>
 
+  <!-- Right arrow -->
+  <button 
+    (click)="nextPendingPage()" 
+    [disabled]="pendingCurrentPage() >= pendingTotalPages()"
+    class="text-gray-400 hover:text-gray-700 transition"
+    aria-label="Next page"
+  >
+    <i class="fas fa-chevron-right"></i>
+  </button>
+
+</div>
+      }
+    </div>
   </div>
 
-  <div class="p-6">
-    @if(pendingLoading()) {
-      <div class="flex justify-center p-8">
-        <div class="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    }
-    @else if(pendingTasks().length === 0) {
-      <div class="flex flex-col items-center justify-center p-8 text-center space-y-4">
-        <div class="bg-indigo-100 p-4 rounded-3xl">
-          <i class="fas fa-check text-indigo-600 text-2xl"></i>
-        </div>
-        <p class="text-gray-600 font-medium">No pending tasks</p>
-        <a routerLink="/tasks/new" class="text-indigo-600 hover:text-indigo-800 underline font-medium">Create a new task</a>
-      </div>
-    }
-    @else {
-      <ul class="divide-y divide-gray-200">
-        @for (task of getSortedPendingTasks(); track task._id) {
-          <li class="mb-2">
-            <a 
-              [routerLink]="['/tasks', task._id]" 
-              class="block w-full p-4 rounded-lg hover:bg-gray-50 hover:shadow-md transition-all"
-              [ngClass]="{'animate-pulse-red': isTaskNearDeadline(task)}"
-            >
-              <div class="flex justify-between items-start">
-                <div class="flex-1">
-                  <h4 class="text-lg font-semibold text-gray-900 mb-1">{{ task.title }}</h4>
-                  <p class="text-gray-500 text-sm truncate max-w-md">{{ task.description }}</p>
-                </div>
-                <div class="flex flex-col items-end ml-4 space-y-2">
-                  <span [ngClass]="{
-                    'bg-red-100 text-red-800': task.priority === 'High',
-                    'bg-yellow-100 text-yellow-800': task.priority === 'Medium',
-                    'bg-green-100 text-green-800': task.priority === 'Low'
-                  }" class="px-3 py-1 rounded-full text-xs font-medium">{{ task.priority }}</span>
-                  <span class="text-xs text-gray-500 flex items-center">
-                    <i class="far fa-calendar mr-1"></i> {{ task.deadline | date:'mediumDate' }}
-                  </span>
-                </div>
-              </div>
-              <div class="mt-3 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                <div class="h-2 rounded-full transition-all duration-500"
-                     [style.width.%]="progressMap[task._id]"
-                     [style.background-color]="colorMap[task._id]">
-                </div>
-              </div>
-            </a>
-          </li>
-        }
-      </ul>
-    }
-  </div>
-</div>
-      <!-- Unfinished Tasks -->
-      <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-        <div class="bg-gradient-to-r from-red-500 to-red-600 p-6">
-          <h3 class="text-xl font-bold text-white flex items-center justify-between">
-            <span><i class="fas fa-exclamation-triangle mr-2"></i>Overdue</span>
-            <span class="bg-white text-red-700 text-sm py-1 px-3 rounded-full font-medium">{{ unfinishedTasks().length }}</span>
-          </h3>
-        </div>
-        <div class="p-6">
-          @if(unfinishedTasks().length === 0) {
-            <div class="flex flex-col items-center justify-center p-8 text-center space-y-2">
-              <div class="bg-red-100 p-4 rounded-3xl">
-                <i class="fas fa-thumbs-up text-red-600 text-2xl"></i>
-              </div>
-              <p class="text-gray-600 font-medium">No unfinished tasks</p>
-              <p class="text-gray-500 text-sm">Great job! Keep it up.</p>
-            </div>
-          }
-          @else {
-            <ul class="divide-y divide-gray-200">
-              @for(task of unfinishedPaginatedTasks(); track task._id) {
-               <li class="mb-2">
-  <a 
-    [routerLink]="['/tasks', task._id]" 
-    class="block w-full p-4 rounded-lg hover:bg-gray-50 hover:shadow-md transition-all"
-  >
-                    <div class="flex justify-between items-start">
-                      <div class="flex-1">
-                        <h4 class="text-lg font-semibold text-gray-900 mb-1">{{ task.title }}</h4>
-                        <p class="text-sm text-gray-600 truncate max-w-md">{{ task.description }}</p>
-                      </div>
-                      <div class="flex flex-col items-end ml-4 space-y-2">
-                        <span [ngClass]="{
-                          'bg-red-100 text-red-800': task.priority === 'High',
-                          'bg-yellow-100 text-yellow-800': task.priority === 'Medium',
-                          'bg-green-100 text-green-800': task.priority === 'Low'
-                        }" class="px-3 py-1 rounded-full text-xs font-medium">{{ task.priority }}</span>
-                        <span class="text-xs text-red-600 font-medium flex items-center">
-                          <i class="fas fa-exclamation-triangle mr-1"></i> Overdue
-                        </span>
-                      </div>
-                    </div>
-                  </a>
-                </li>
-              }
-            </ul>
-          }
-        </div>
-      </div>
-
-      <!-- Completed Tasks -->
-      <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-        <div class="bg-gradient-to-r from-green-500 to-emerald-600 p-6">
-          <h3 class="text-xl font-bold text-white flex items-center justify-between">
-            <span><i class="fas fa-check-circle mr-2"></i> Completed</span>
-            <span class="bg-white text-green-700 text-sm py-1 px-3 rounded-full font-medium">{{ completedTasks().length }}</span>
-          </h3>
-        </div>
-        <div class="p-6">
-          @if(completedTasks().length === 0) {
-            <div class="flex flex-col items-center justify-center p-8 text-center space-y-2">
-              <div class="bg-green-100 p-4 rounded-3xl">
-                <i class="fas fa-clipboard-list text-green-600 text-2xl"></i>
-              </div>
-              <p class="text-gray-600 font-medium">No completed tasks</p>
-            </div>
-          }
-          @else {
-            <ul class="divide-y divide-gray-200">
-              @for(task of completedPaginatedTasks(); track task._id) {
-                 <li class="mb-2">
-  <a 
-    [routerLink]="['/tasks', task._id]" 
-    class="block w-full p-4 rounded-lg hover:bg-gray-50 hover:shadow-md transition-all"
-  >
-                    <div class="flex justify-between items-start">
-                      <div class="flex-1">
-                        <h4 class="text-lg font-semibold text-gray-700 line-through mb-1">{{ task.title }}</h4>
-                        <p class="text-sm text-gray-500 truncate max-w-md">{{ task.description }}</p>
-                      </div>
-                      <div class="flex flex-col items-end ml-4 space-y-2">
-                        <span [ngClass]="{
-                          'bg-red-50 text-red-600': task.priority === 'High',
-                          'bg-yellow-50 text-yellow-600': task.priority === 'Medium',
-                          'bg-green-50 text-green-600': task.priority === 'Low'
-                        }" class="px-3 py-1 rounded-full text-xs font-medium">{{ task.priority }}</span>
-                        <span class="text-xs text-gray-500 flex items-center">
-                          <i class="far fa-check-circle mr-1"></i> Completed
-                        </span>
-                      </div>
-                    </div>
-                  </a>
-                </li>
-              }
-            </ul>
-          }
-        </div>
-      </div>
-
+  <!-- Unfinished Tasks -->
+  <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+    <div class="bg-gradient-to-r from-red-500 to-red-600 p-6">
+      <h3 class="text-xl font-bold text-white flex items-center justify-between">
+        <span><i class="fas fa-exclamation-triangle mr-2"></i>Overdue</span>
+        <span class="bg-white text-red-700 text-sm py-1 px-3 rounded-full font-medium">{{ unfinishedTotalTasks()}}</span>
+      </h3>
     </div>
-  }
+    <div class="p-6">
+      @if(unfinishedTasks().length === 0) {
+        <div class="flex flex-col items-center justify-center p-8 text-center space-y-2">
+          <div class="bg-red-100 p-4 rounded-3xl">
+            <i class="fas fa-thumbs-up text-red-600 text-2xl"></i>
+          </div>
+          <p class="text-gray-600 font-medium">No unfinished tasks</p>
+          <p class="text-gray-500 text-sm">Great job! Keep it up.</p>
+        </div>
+      }
+      @else {
+        <ul class="divide-y divide-gray-200">
+          @for(task of unfinishedPaginatedTasks(); track task._id) {
+            <li class="mb-2">
+              <a [routerLink]="['/tasks', task._id]" class="block w-full p-4 rounded-lg hover:bg-gray-50 hover:shadow-md transition-all">
+                <div class="flex justify-between items-start">
+                  <div class="flex-1">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-1">{{ task.title }}</h4>
+                    <p class="text-sm text-gray-600 truncate max-w-md">{{ task.description }}</p>
+                  </div>
+                  <div class="flex flex-col items-end ml-4 space-y-2">
+                    <span [ngClass]="{
+                      'bg-red-100 text-red-800': task.priority === 'High',
+                      'bg-yellow-100 text-yellow-800': task.priority === 'Medium',
+                      'bg-green-100 text-green-800': task.priority === 'Low'
+                    }" class="px-3 py-1 rounded-full text-xs font-medium">{{ task.priority }}</span>
+                    <span class="text-xs text-red-600 font-medium flex items-center">
+                      <i class="fas fa-exclamation-triangle mr-1"></i> Overdue
+                    </span>
+                  </div>
+                </div>
+              </a>
+            </li>
+          }
+        </ul>
+<!-- Minimalist Pagination with FA Arrows (shown only if more than 10 tasks) -->
+<div *ngIf="unfinishedTotalTasks() > unfinishedItemsPerPage()" class="flex items-center justify-between mt-4 text-gray-500 text-sm">
+  
+  <!-- Left arrow -->
+  <button 
+    (click)="previousUnfinishedPage()" 
+    [disabled]="unfinishedCurrentPage() === 1"
+    class="text-gray-400 hover:text-gray-700 transition"
+    aria-label="Previous page"
+  >
+    <i class="fas fa-chevron-left"></i>
+  </button>
+
+  <!-- Current page info -->
+  <span class="text-gray-500">
+    Page {{ unfinishedCurrentPage() }} of {{ unfinishedTotalPages() }}
+  </span>
+
+  <!-- Right arrow -->
+  <button 
+    (click)="nextUnfinishedPage()" 
+    [disabled]="unfinishedCurrentPage() >= unfinishedTotalPages()"
+    class="text-gray-400 hover:text-gray-700 transition"
+    aria-label="Next page"
+  >
+    <i class="fas fa-chevron-right"></i>
+  </button>
+
+</div>
+      }
+    </div>
+  </div>
+
+  <!-- Completed Tasks -->
+  <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+    <div class="bg-gradient-to-r from-green-500 to-emerald-600 p-6">
+      <h3 class="text-xl font-bold text-white flex items-center justify-between">
+        <span><i class="fas fa-check-circle mr-2"></i> Completed</span>
+        <span class="bg-white text-green-700 text-sm py-1 px-3 rounded-full font-medium">{{ completedTotalTasks()}}</span>
+      </h3>
+    </div>
+    <div class="p-6">
+      @if(completedTasks().length === 0) {
+        <div class="flex flex-col items-center justify-center p-8 text-center space-y-2">
+          <div class="bg-green-100 p-4 rounded-3xl">
+            <i class="fas fa-clipboard-list text-green-600 text-2xl"></i>
+          </div>
+          <p class="text-gray-600 font-medium">No completed tasks</p>
+        </div>
+      }
+      @else {
+        <ul class="divide-y divide-gray-200">
+          @for(task of completedPaginatedTasks(); track task._id) {
+            <li class="mb-2">
+              <a [routerLink]="['/tasks', task._id]" class="block w-full p-4 rounded-lg hover:bg-gray-50 hover:shadow-md transition-all">
+                <div class="flex justify-between items-start">
+                  <div class="flex-1">
+                    <h4 class="text-lg font-semibold text-gray-700 line-through mb-1">{{ task.title }}</h4>
+                    <p class="text-sm text-gray-500 truncate max-w-md">{{ task.description }}</p>
+                  </div>
+                  <div class="flex flex-col items-end ml-4 space-y-2">
+                    <span [ngClass]="{
+                      'bg-red-50 text-red-600': task.priority === 'High',
+                      'bg-yellow-50 text-yellow-600': task.priority === 'Medium',
+                      'bg-green-50 text-green-600': task.priority === 'Low'
+                    }" class="px-3 py-1 rounded-full text-xs font-medium">{{ task.priority }}</span>
+                    <span class="text-xs text-gray-500 flex items-center">
+                      <i class="far fa-check-circle mr-1"></i> Completed
+                    </span>
+                  </div>
+                </div>
+              </a>
+            </li>
+          }
+        </ul>
+
+        
+<!-- Minimalist Pagination with FA Arrows (shown only if more than 10 tasks) -->
+<div *ngIf="completedTotalTasks() > completedItemsPerPage()" class="flex items-center justify-between mt-4 text-gray-500 text-sm">
+  
+  <!-- Left arrow -->
+  <button 
+    (click)="previousCompletedPage()" 
+    [disabled]="completedCurrentPage() === 1"
+    class="text-gray-400 hover:text-gray-700 transition"
+    aria-label="Previous page"
+  >
+    <i class="fas fa-chevron-left"></i>
+  </button>
+
+  <!-- Current page info -->
+  <span class="text-gray-500">
+    Page {{ completedCurrentPage() }} of {{ completedTotalPages() }}
+  </span>
+
+  <!-- Right arrow -->
+  <button 
+    (click)="nextCompletedPage()" 
+    [disabled]="completedCurrentPage() >= completedTotalPages()"
+    class="text-gray-400 hover:text-gray-700 transition"
+    aria-label="Next page"
+  >
+    <i class="fas fa-chevron-right"></i>
+  </button>
+
+</div>
+      }
+    </div>
+  </div>
+
 </div>
 
-
-<<div
+<div
   *ngIf="showOverdueAlert()"
   class="fixed top-5 right-5 z-50 rounded-xl shadow-lg p-4
          w-11/12 max-w-sm sm:w-96 animate-slide-in text-white"
