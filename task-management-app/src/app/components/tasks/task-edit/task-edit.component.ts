@@ -146,4 +146,14 @@ private toUTCISOString(datetimeLocal: string): string {
     },
   });
 }
+
+preventTyping(event: KeyboardEvent) {
+    const allowedKeys = [
+      'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Enter'
+    ];
+    if (!allowedKeys.includes(event.key)) {
+      event.preventDefault();
+    }
+  }
+  
 }

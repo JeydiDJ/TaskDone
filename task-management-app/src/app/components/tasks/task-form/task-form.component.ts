@@ -55,7 +55,7 @@ export class TaskFormComponent {
     );
   }
 
-  // ✅ Null-safe validator
+
   deadlineAfterStartDate(group: FormGroup) {
     const start = group.get('startDate')?.value;
     const end = group.get('deadline')?.value;
@@ -67,7 +67,6 @@ export class TaskFormComponent {
       : { deadlineBeforeStart: true };
   }
 
-  // ✅ CORRECT conversion: local → UTC
   private toUTCISOString(datetimeLocal: string): string {
     return new Date(datetimeLocal).toISOString();
   }
@@ -122,4 +121,16 @@ export class TaskFormComponent {
     this.showReminder.set(false);
     this.router.navigate(['/tasks']);
   }
+
+
+  preventTyping(event: KeyboardEvent) {
+    const allowedKeys = [
+      'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Enter'
+    ];
+    if (!allowedKeys.includes(event.key)) {
+      event.preventDefault();
+    }
+  }
+
 }
+
