@@ -1,314 +1,244 @@
-<div class="container mx-auto p-4 max-w-7xl">
-    @if (showReminder()) {
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
-                <div class="flex items-start">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-bell text-blue-500 text-2xl"></i>
-                    </div>
-                    <div class="ml-3 flex-1">
-                        <h3 class="text-lg font-medium text-gray-900">Reminder</h3>
-                        <p class="mt-2 text-sm text-gray-600">{{ reminderMessage() }}</p>
-                        <div class="mt-4 flex justify-end">
-                            <button
-                                (click)="dismissReminder()"
-                                class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            >
-                                Ok
-                            </button>
-                        </div>
-                    </div>
-                </div>
+<div class="container mx-auto p-6 max-w-7xl">
+
+  <!-- Reminder Modal -->
+  @if(showReminder()) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 mx-4 animate-fadeIn">
+        <div class="flex items-start space-x-4">
+          <div class="flex-shrink-0">
+            <i class="fas fa-bell text-blue-500 text-3xl animate-bounce"></i>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-xl font-semibold text-gray-900">Reminder</h3>
+            <p class="mt-2 text-gray-600">{{ reminderMessage() }}</p>
+            <div class="mt-4 flex justify-end">
+              <button (click)="dismissReminder()"
+                class="px-5 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                OK
+              </button>
             </div>
+          </div>
         </div>
-    }
-<!-- Badge Modal -->
-@if (showBadgeModal() && currentBadge()) {
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full mx-4 text-center animate-scaleIn">
-      <div class="text-6xl mb-4">
-        {{ currentBadge()?.icon }}
+      </div>
+    </div>
+  }
+
+  <!-- Badge Modal -->
+  @if(showBadgeModal() && currentBadge()) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white p-8 rounded-3xl shadow-2xl max-w-md w-full mx-4 text-center animate-scaleIn">
+        <div class="text-7xl mb-4 text-indigo-500 animate-pulse">
+          {{ currentBadge()?.icon }}
+        </div>
+        <h2 class="text-3xl font-bold text-gray-800 mb-2">Badge Unlocked!</h2>
+        <p class="text-gray-600 mb-6 text-lg">{{ currentBadge()?.name }}</p>
+        <button (click)="showBadgeModal.set(false)"
+          class="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-shadow shadow-md">
+          Awesome!
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Page Header -->
+  <div class="flex justify-between items-center mb-10">
+    <h2 class="text-4xl font-bold text-gray-900 tracking-tight"></h2>
+    <a routerLink="/tasks/new" class="inline-flex items-center px-5 py-3 bg-indigo-600 text-white rounded-xl shadow hover:bg-indigo-700 transition">
+      <i class="fas fa-plus mr-2"></i> New Task
+    </a>
+  </div>
+
+  <!-- Loading State -->
+  @if(completedLoading() || pendingLoading() || unfinishedLoading()) {
+    <div class="flex items-center justify-center p-16">
+      <div class="flex flex-col items-center space-y-4">
+        <div class="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+        <p class="text-gray-600 text-lg font-medium">Loading your tasks...</p>
+      </div>
+    </div>
+  }
+
+  <!-- Error State -->
+  @else if(completedError() || pendingError() || unfinishedError()) {
+    <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-6 rounded-xl mb-6 shadow-sm">
+      <div class="flex items-start space-x-4">
+        <i class="fas fa-exclamation-circle text-red-500 text-2xl mt-1"></i>
+        <div>
+          <p class="font-semibold">Something went wrong</p>
+          <p class="text-sm mt-1">{{ completedError() || pendingError() || unfinishedError() }}</p>
+          <button (click)="refreshData()"
+            class="mt-2 text-sm text-red-600 hover:text-red-800 underline font-medium">Try again</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Task Columns -->
+  @else {
+    <div class="grid md:grid-cols-3 gap-8">
+
+      <!-- Pending Tasks -->
+      <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="bg-gradient-to-r from-indigo-500 to-purple-600 p-6">
+          <h3 class="text-xl font-bold text-white flex items-center justify-between">
+            <span><i class="fas fa-spinner mr-2 animate-spin"></i> Ongoing</span>
+            <span class="bg-white text-indigo-700 text-sm py-1 px-3 rounded-full font-medium">{{ pendingTasks().length }}</span>
+          </h3>
+        </div>
+        <div class="p-6">
+          @if(pendingLoading()) {
+            <div class="flex justify-center p-8">
+              <div class="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          }
+          @else if(pendingTasks().length === 0) {
+            <div class="flex flex-col items-center justify-center p-8 text-center space-y-4">
+              <div class="bg-indigo-100 p-4 rounded-3xl">
+                <i class="fas fa-check text-indigo-600 text-2xl"></i>
+              </div>
+              <p class="text-gray-600 font-medium">No pending tasks</p>
+              <a routerLink="/tasks/new" class="text-indigo-600 hover:text-indigo-800 underline font-medium">Create a new task</a>
+            </div>
+          }
+          @else {
+            <ul class="divide-y divide-gray-200">
+              @for (task of pendingPaginatedTasks(); track task._id) {
+                <li class="mb-2">
+  <a 
+    [routerLink]="['/tasks', task._id]" 
+    class="block w-full p-4 rounded-lg hover:bg-gray-50 hover:shadow-md transition-all"
+  >
+                    <div class="flex justify-between items-start">
+                      <div class="flex-1">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-1">{{ task.title }}</h4>
+                        <p class="text-gray-500 text-sm truncate max-w-md">{{ task.description }}</p>
+                      </div>
+                      <div class="flex flex-col items-end ml-4 space-y-2">
+                        <span [ngClass]="{
+                          'bg-red-100 text-red-800': task.priority === 'High',
+                          'bg-yellow-100 text-yellow-800': task.priority === 'Medium',
+                          'bg-green-100 text-green-800': task.priority === 'Low'
+                        }" class="px-3 py-1 rounded-full text-xs font-medium">{{ task.priority }}</span>
+                        <span class="text-xs text-gray-500 flex items-center">
+                          <i class="far fa-calendar mr-1"></i> {{ task.deadline | date:'mediumDate' }}
+                        </span>
+                      </div>
+                    </div>
+                    <div class="mt-3 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                      <div class="h-2 rounded-full transition-all duration-500"
+                        [style.width.%]="progressMap[task._id]"
+                        [style.background-color]="colorMap[task._id]">
+                      </div>
+                    </div>
+                  </a>
+                </li>
+              }
+            </ul>
+          }
+        </div>
       </div>
 
-      <h2 class="text-2xl font-bold text-gray-800 mb-2">
-        Badge Unlocked!
-      </h2>
+      <!-- Unfinished Tasks -->
+      <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="bg-gradient-to-r from-red-500 to-red-600 p-6">
+          <h3 class="text-xl font-bold text-white flex items-center justify-between">
+            <span><i class="fas fa-exclamation-triangle mr-2"></i>Overdue</span>
+            <span class="bg-white text-red-700 text-sm py-1 px-3 rounded-full font-medium">{{ unfinishedTasks().length }}</span>
+          </h3>
+        </div>
+        <div class="p-6">
+          @if(unfinishedTasks().length === 0) {
+            <div class="flex flex-col items-center justify-center p-8 text-center space-y-2">
+              <div class="bg-red-100 p-4 rounded-3xl">
+                <i class="fas fa-thumbs-up text-red-600 text-2xl"></i>
+              </div>
+              <p class="text-gray-600 font-medium">No unfinished tasks</p>
+              <p class="text-gray-500 text-sm">Great job! Keep it up.</p>
+            </div>
+          }
+          @else {
+            <ul class="divide-y divide-gray-200">
+              @for(task of unfinishedPaginatedTasks(); track task._id) {
+               <li class="mb-2">
+  <a 
+    [routerLink]="['/tasks', task._id]" 
+    class="block w-full p-4 rounded-lg hover:bg-gray-50 hover:shadow-md transition-all"
+  >
+                    <div class="flex justify-between items-start">
+                      <div class="flex-1">
+                        <h4 class="text-lg font-semibold text-gray-900 mb-1">{{ task.title }}</h4>
+                        <p class="text-sm text-gray-600 truncate max-w-md">{{ task.description }}</p>
+                      </div>
+                      <div class="flex flex-col items-end ml-4 space-y-2">
+                        <span [ngClass]="{
+                          'bg-red-100 text-red-800': task.priority === 'High',
+                          'bg-yellow-100 text-yellow-800': task.priority === 'Medium',
+                          'bg-green-100 text-green-800': task.priority === 'Low'
+                        }" class="px-3 py-1 rounded-full text-xs font-medium">{{ task.priority }}</span>
+                        <span class="text-xs text-red-600 font-medium flex items-center">
+                          <i class="fas fa-exclamation-triangle mr-1"></i> Overdue
+                        </span>
+                      </div>
+                    </div>
+                  </a>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </div>
 
-      <p class="text-gray-600 mb-6">
-        {{ currentBadge()?.name }}
-      </p>
+      <!-- Completed Tasks -->
+      <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div class="bg-gradient-to-r from-green-500 to-emerald-600 p-6">
+          <h3 class="text-xl font-bold text-white flex items-center justify-between">
+            <span><i class="fas fa-check-circle mr-2"></i> Completed</span>
+            <span class="bg-white text-green-700 text-sm py-1 px-3 rounded-full font-medium">{{ completedTasks().length }}</span>
+          </h3>
+        </div>
+        <div class="p-6">
+          @if(completedTasks().length === 0) {
+            <div class="flex flex-col items-center justify-center p-8 text-center space-y-2">
+              <div class="bg-green-100 p-4 rounded-3xl">
+                <i class="fas fa-clipboard-list text-green-600 text-2xl"></i>
+              </div>
+              <p class="text-gray-600 font-medium">No completed tasks</p>
+            </div>
+          }
+          @else {
+            <ul class="divide-y divide-gray-200">
+              @for(task of completedPaginatedTasks(); track task._id) {
+                 <li class="mb-2">
+  <a 
+    [routerLink]="['/tasks', task._id]" 
+    class="block w-full p-4 rounded-lg hover:bg-gray-50 hover:shadow-md transition-all"
+  >
+                    <div class="flex justify-between items-start">
+                      <div class="flex-1">
+                        <h4 class="text-lg font-semibold text-gray-700 line-through mb-1">{{ task.title }}</h4>
+                        <p class="text-sm text-gray-500 truncate max-w-md">{{ task.description }}</p>
+                      </div>
+                      <div class="flex flex-col items-end ml-4 space-y-2">
+                        <span [ngClass]="{
+                          'bg-red-50 text-red-600': task.priority === 'High',
+                          'bg-yellow-50 text-yellow-600': task.priority === 'Medium',
+                          'bg-green-50 text-green-600': task.priority === 'Low'
+                        }" class="px-3 py-1 rounded-full text-xs font-medium">{{ task.priority }}</span>
+                        <span class="text-xs text-gray-500 flex items-center">
+                          <i class="far fa-check-circle mr-1"></i> Completed
+                        </span>
+                      </div>
+                    </div>
+                  </a>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </div>
 
-      <button
-        (click)="showBadgeModal.set(false)"
-        class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-      >
-        Awesome!
-      </button>
     </div>
-  </div>
-}
-
-    <div class="flex justify-between items-center mb-8">
-        <h2 class="text-3xl font-bold text-gray-900">My Tasks</h2>
-        <a routerLink="/tasks/new" class="btn-primary inline-flex items-center">
-            <i class="fas fa-plus mr-2"></i> New Task
-        </a>
-    </div>
-
-    <!-- Loading State -->
-    @if(completedLoading() || pendingLoading() || unfinishedLoading()) {
-        <div class="flex items-center justify-center p-12">
-            <div class="flex flex-col items-center">
-                <div class="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                <p class="mt-4 text-gray-600">Loading your tasks...</p>
-            </div>
-        </div>
-    }
-
-    <!-- Error State -->
-    @else if(completedError() || pendingError() || unfinishedError()) {
-        <div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl mb-6" role="alert">
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <i class="fas fa-exclamation-circle text-red-500"></i>
-                </div>
-                <div class="ml-3">
-                    <p class="font-medium">Something went wrong</p>
-                    <p class="text-sm">{{ completedError() || pendingError() || unfinishedError() }}</p>
-                    <button class="text-sm text-red-600 hover:text-red-800 underline mt-2" (click)="refreshData()">Try again</button>
-                </div>
-            </div>
-        </div>
-    }
-
-    <!-- Tasks Content -->
-    @else {
-        <div class="md:grid md:grid-cols-3 md:gap-8">
-            <!-- Ongoing Tasks -->
-            <div class="card overflow-hidden mb-8 md:mb-0">
-                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 p-6">
-                    <h3 class="text-xl font-bold text-white flex items-center">
-                        <i class="fas fa-spinner mr-2"></i> My Tasks
-                        <span class="ml-2 bg-white text-indigo-700 text-sm py-1 px-3 rounded-full font-medium">{{ pendingTasks().length }}</span>
-                    </h3>
-                </div>
-
-                <div class="p-6">
-                    @if(pendingLoading()) {
-                        <div class="flex justify-center p-8">
-                            <div class="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                        </div>
-                    }
-                    @else if(pendingTasks().length === 0) {
-                        <div class="flex flex-col items-center justify-center p-8 text-center">
-                            <div class="bg-indigo-100 p-4 rounded-2xl">
-                                <i class="fas fa-check text-indigo-600 text-2xl"></i>
-                            </div>
-                            <p class="text-gray-600 mt-4 font-medium">No tasks found.</p>
-                            <a routerLink="/tasks/new" class="mt-4 text-indigo-600 hover:text-indigo-800 underline font-medium">Create a new task</a>
-                        </div>
-                    }
-                    @else {
-                        <ul class="divide-y divide-gray-200">
-                            @for (task of pendingPaginatedTasks(); track task._id) {
-                                <li class="py-4 hover:bg-gray-50 transition-colors rounded-lg"
-                                [ngClass]="{'animate-pulse-red': isTaskNearDeadline(task)
-                                    }">
-                                    <a [routerLink]="['/tasks', task._id]" class="block">
-                                        <div class="flex justify-between">
-                                            <div class="flex-1">
-                                                <h4 class="text-lg font-medium text-gray-900 mb-1">{{ task.title }}</h4>
-                                                <p class="text-sm text-gray-600 truncate max-w-md">{{ task.description }}</p>
-                                            </div>
-                                            <div class="flex flex-col items-end ml-4">
-                                                <span [ngClass]="{
-                                                    'bg-red-100 text-red-800': task.priority === 'High',
-                                                    'bg-yellow-100 text-yellow-800': task.priority === 'Medium',
-                                                    'bg-green-100 text-green-800': task.priority === 'Low'
-                                                }" class="px-3 py-1 rounded-full text-xs font-medium">{{ task.priority }}</span>
-
-                                                <span class="text-xs text-gray-500 mt-2 flex items-center">
-                                                    <i class="far fa-calendar mr-1"></i>
-                                                    {{ task.deadline | date:'mediumDate' }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                      <div class="mt-3 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-  <div
-    class="h-2 rounded-full transition-all duration-500"
-    [style.width.%]="progressMap[task._id]"
-    [style.background-color]="colorMap[task._id]"
-  ></div>
-</div>
-                                    </a>
-                                </li>
-                            }
-                        </ul>
-
-                        <!-- Pagination -->
-                        @if(pendingTotalPages() > 1) {
-                            <div class="flex justify-between items-center border-t border-gray-200 pt-4 mt-4">
-                                <button (click)="previousPendingPage()"
-                                        [disabled]="pendingCurrentPage() === 1"
-                                        class="flex items-center text-sm text-indigo-600 hover:text-indigo-800 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors">
-                                    <i class="fas fa-arrow-left mr-1"></i> Previous
-                                </button>
-                                <span class="text-sm text-gray-600">Page {{ pendingCurrentPage() }} of {{ pendingTotalPages() }}</span>
-                                <button (click)="nextPendingPage()"
-                                        [disabled]="pendingCurrentPage() === pendingTotalPages()"
-                                        class="flex items-center text-sm text-indigo-600 hover:text-indigo-800 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors">
-                                    Next <i class="fas fa-arrow-right ml-1"></i>
-                                </button>
-                            </div>
-                        }
-                    }
-                </div>
-            </div>
-
-            <!-- Unfinished Tasks -->
-            <div class="card overflow-hidden mb-8 md:mb-0">
-                <div class="bg-gradient-to-r from-red-500 to-red-600 p-6">
-                    <h3 class="text-xl font-bold text-white flex items-center">
-                        <i class="fas fa-exclamation-triangle mr-2"></i> Unfinished Tasks
-                        <span class="ml-2 bg-white text-red-700 text-sm py-1 px-3 rounded-full font-medium">{{ unfinishedTasks().length }}</span>
-                    </h3>
-                </div>
-
-                <div class="p-6">
-                    @if(unfinishedLoading()) {
-                        <div class="flex justify-center p-8">
-                            <div class="w-10 h-10 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-                        </div>
-                    }
-                    @else if(unfinishedTasks().length === 0) {
-                        <div class="flex flex-col items-center justify-center p-8 text-center">
-                            <div class="bg-red-100 p-4 rounded-2xl">
-                                <i class="fas fa-thumbs-up text-red-600 text-2xl"></i>
-                            </div>
-                            <p class="text-gray-600 mt-4 font-medium">No unfinished tasks for now.</p>
-                            <p class="text-gray-500 text-sm mt-2">Great job! Get that Task Done, keep it up.</p>
-                        </div>
-                    }
-                    @else {
-                        <ul class="divide-y divide-gray-200">
-                            @for (task of unfinishedPaginatedTasks(); track task._id) {
-                                <li class="py-4 hover:bg-gray-50 transition-colors rounded-lg">
-                                    <a [routerLink]="['/tasks', task._id]" class="block">
-                                        <div class="flex justify-between">
-                                            <div class="flex-1">
-                                                <h4 class="text-lg font-medium text-gray-900 mb-1">{{ task.title }}</h4>
-                                                <p class="text-sm text-gray-600 truncate max-w-md">{{ task.description }}</p>
-                                            </div>
-                                            <div class="flex flex-col items-end ml-4">
-                                                <span [ngClass]="{
-                                                    'bg-red-100 text-red-800': task.priority === 'High',
-                                                    'bg-yellow-100 text-yellow-800': task.priority === 'Medium',
-                                                    'bg-green-100 text-green-800': task.priority === 'Low'
-                                                }" class="px-3 py-1 rounded-full text-xs font-medium">{{ task.priority }}</span>
-
-                                                <span class="text-xs text-red-600 mt-2 flex items-center font-medium">
-                                                    <i class="fas fa-exclamation-triangle mr-1"></i>
-                                                    Overdue
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </li>
-                            }
-                        </ul>
-
-                        <!-- Pagination -->
-                        @if(unfinishedTotalPages() > 1) {
-                            <div class="flex justify-between items-center border-t border-gray-200 pt-4 mt-4">
-                                <button (click)="previousUnfinishedPage()"
-                                        [disabled]="unfinishedCurrentPage() === 1"
-                                        class="flex items-center text-sm text-red-600 hover:text-red-800 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors">
-                                    <i class="fas fa-arrow-left mr-1"></i> Previous
-                                </button>
-                                <span class="text-sm text-gray-600">Page {{ unfinishedCurrentPage() }} of {{ unfinishedTotalPages() }}</span>
-                                <button (click)="nextUnfinishedPage()"
-                                        [disabled]="unfinishedCurrentPage() === unfinishedTotalPages()"
-                                        class="flex items-center text-sm text-red-600 hover:text-red-800 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors">
-                                    Next <i class="fas fa-arrow-right ml-1"></i>
-                                </button>
-                            </div>
-                        }
-                    }
-                </div>
-            </div>
-
-            <!-- Completed Tasks -->
-            <div class="card overflow-hidden">
-                <div class="bg-gradient-to-r from-green-500 to-emerald-600 p-6">
-                    <h3 class="text-xl font-bold text-white flex items-center">
-                        <i class="fas fa-check-circle mr-2"></i> Completed Tasks
-                        <span class="ml-2 bg-white text-green-700 text-sm py-1 px-3 rounded-full font-medium">{{ completedTasks().length }}</span>
-                    </h3>
-                </div>
-
-                <div class="p-6">
-                    @if(completedLoading()) {
-                        <div class="flex justify-center p-8">
-                            <div class="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-                        </div>
-                    }
-                    @else if(completedTasks().length === 0) {
-                        <div class="flex flex-col items-center justify-center p-8 text-center">
-                            <div class="bg-green-100 p-4 rounded-2xl">
-                                <i class="fas fa-clipboard-list text-green-600 text-2xl"></i>
-                            </div>
-                            <p class="text-gray-600 mt-4 font-medium">No completed tasks.</p>
-                        </div>
-                    }
-                    @else {
-                        <ul class="divide-y divide-gray-200">
-                            @for (task of completedPaginatedTasks(); track task._id) {
-                                <li class="py-4 hover:bg-gray-50 transition-colors rounded-lg">
-                                    <a [routerLink]="['/tasks', task._id]" class="block">
-                                        <div class="flex justify-between">
-                                            <div class="flex-1">
-                                                <h4 class="text-lg font-medium text-gray-700 line-through">{{ task.title }}</h4>
-                                                <p class="text-sm text-gray-500 truncate max-w-md">{{ task.description }}</p>
-                                            </div>
-                                            <div class="flex flex-col items-end ml-4">
-                                                <span [ngClass]="{
-                                                    'bg-red-50 text-red-600': task.priority === 'High',
-                                                    'bg-yellow-50 text-yellow-600': task.priority === 'Medium',
-                                                    'bg-green-50 text-green-600': task.priority === 'Low'
-                                                }" class="px-3 py-1 rounded-full text-xs font-medium">{{ task.priority }}</span>
-
-                                                <span class="text-xs text-gray-500 mt-2 flex items-center">
-                                                    <i class="far fa-check-circle mr-1"></i>
-                                                    Completed
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </li>
-                            }
-                        </ul>
-
-                        <!-- Pagination -->
-                        @if(completedTotalPages() > 1) {
-                            <div class="flex justify-between items-center border-t border-gray-200 pt-4 mt-4">
-                                <button (click)="previousCompletedPage()"
-                                        [disabled]="completedCurrentPage() === 1"
-                                        class="flex items-center text-sm text-green-600 hover:text-green-800 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors">
-                                    <i class="fas fa-arrow-left mr-1"></i> Previous
-                                </button>
-                                <span class="text-sm text-gray-600">Page {{ completedCurrentPage() }} of {{ completedTotalPages() }}</span>
-                                <button (click)="nextCompletedPage()"
-                                        [disabled]="completedCurrentPage() === completedTotalPages()"
-                                        class="flex items-center text-sm text-green-600 hover:text-green-800 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors">
-                                    Next <i class="fas fa-arrow-right ml-1"></i>
-                                </button>
-                            </div>
-                        }
-                    }
-                </div>
-            </div>
-        </div>
-    }
+  }
 </div>
 
 
