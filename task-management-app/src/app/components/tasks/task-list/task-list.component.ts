@@ -50,6 +50,7 @@ export class TaskListComponent implements OnInit {
   completedTotalTasks = signal<number>(0); // Add signal for total completed tasks
   pendingTotalTasks = signal<number>(0);   // Add signal for total pending tasks
   unfinishedTotalTasks = signal<number>(0); // Add signal for total unfinished tasks
+  showSortMenu = false;
 
   taskService = inject(TaskService);
   auth = inject(AuthService);

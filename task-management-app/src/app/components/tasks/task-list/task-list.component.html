@@ -77,36 +77,62 @@
 <div class="grid md:grid-cols-3 gap-8">
 
   <!-- Pending Tasks -->
-  <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-    <div class="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 flex items-center justify-between">
-      <h3 class="text-xl font-bold text-white flex items-center">
-        <i class="fas fa-spinner mr-2 animate-spin"></i> Ongoing
-        <span class="ml-2 bg-white bg-opacity-20 text-white text-sm py-1 px-3 rounded-full font-medium">{{ pendingTotalTasks()}}</span>
-      </h3>
+<div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+  <div class="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 flex items-center justify-between">
+    
+    <!-- Header Title -->
+    <h3 class="text-xl font-bold text-white flex items-center">
+      <i class="fas fa-spinner mr-2 animate-spin"></i> Ongoing
+      <span class="ml-2 bg-white bg-opacity-20 text-white text-sm py-1 px-3 rounded-full font-medium">{{ pendingTotalTasks()}}</span>
+    </h3>
 
-      <!-- Sorting Controls -->
-      <div class="flex items-center space-x-2 text-sm font-medium text-white">
-        <div class="relative">
-          <select
-            [(ngModel)]="ongoingSortType"
-            class="appearance-none bg-white bg-opacity-10 text-gray-900 pl-4 pr-6 py-1 rounded-md border border-white border-opacity-20 focus:outline-none focus:ring-1 focus:ring-white shadow-inner"
-          >
-            <option class="text-gray-900" value="deadline">Deadline</option>
-            <option class="text-gray-900" value="priority">Priority</option>
-            <option class="text-gray-900" value="alphabetical">A → Z</option>
-          </select>
-          <i class="fas fa-chevron-down absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none text-white text-xs"></i>
-        </div>
-
-        <button
-          (click)="toggleSortOrder()"
-          class="flex items-center justify-center w-6 h-6 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition"
-          title="Toggle ascending/descending"
+    <!-- Sorting Controls -->
+    <div class="flex items-center space-x-2 relative">
+      
+      <!-- Trigger + Dropdown -->
+      <div class="relative">
+        <!-- Trigger Button -->
+        <button 
+          (click)="showSortMenu = !showSortMenu" 
+          class="px-3 py-1 bg-white bg-opacity-20 text-white rounded-md flex items-center space-x-1 hover:bg-opacity-30 transition"
         >
-          <span class="text-white text-xs">{{ ongoingSortOrder === 'asc' ? '↑' : '↓' }}</span>
+          <span>{{ ongoingSortType | titlecase }}</span>
+          <i class="fas fa-chevron-down text-xs"></i>
         </button>
+
+        <!-- Popover Menu -->
+        <div 
+          *ngIf="showSortMenu" 
+          class="absolute right-0 top-full mt-1 w-36 bg-white rounded-md shadow-lg py-1 z-50"
+        >
+          <button 
+            class="block w-full px-4 py-2 text-left text-gray-900 hover:bg-gray-100 transition"
+            (click)="ongoingSortType='deadline'; showSortMenu=false"
+          >Deadline</button>
+          <button 
+            class="block w-full px-4 py-2 text-left text-gray-900 hover:bg-gray-100 transition"
+            (click)="ongoingSortType='priority'; showSortMenu=false"
+          >Priority</button>
+          <button 
+            class="block w-full px-4 py-2 text-left text-gray-900 hover:bg-gray-100 transition"
+            (click)="ongoingSortType='alphabetical'; showSortMenu=false"
+          >A → Z</button>
+        </div>
       </div>
+
+      <!-- Sort Order Toggle -->
+      <button
+        (click)="toggleSortOrder()"
+        class="flex items-center justify-center w-6 h-6 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition"
+        title="Toggle ascending/descending"
+      >
+        <span class="text-white text-xs">{{ ongoingSortOrder === 'asc' ? '↑' : '↓' }}</span>
+      </button>
+      
     </div>
+  </div>
+
+  
 
     <div class="p-6">
       @if(pendingLoading()) {
