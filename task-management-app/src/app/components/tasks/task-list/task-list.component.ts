@@ -511,37 +511,29 @@ isTaskNearDeadline(task: Task) {
   }
 
   checkGentleReminder() {
-    const now = new Date();
+  const todayKey = new Date().toDateString();
 
-    // Group tasks by startDate
-    const startDateGroups: { [key: string]: Task[] } = {};
+  // Tasks created today
+  const tasksToday = this.allTasks().filter(task => {
+    if (!task.createdAt) return false;
+    return new Date(task.createdAt).toDateString() === todayKey;
+  });
 
-    this.allTasks().forEach(task => {
-      if (task.startDate && task.createdAt && !task.completed && task.deadline && new Date(task.deadline) > now) {
-        const startDateKey = new Date(task.startDate).toDateString();
-        if (!startDateGroups[startDateKey]) {
-          startDateGroups[startDateKey] = [];
-        }
-        startDateGroups[startDateKey].push(task);
-      }
-    });
+  const count = tasksToday.length;
 
-    // Check each startDate group for multiples of 5 tasks
-    for (const [startDateKey, tasks] of Object.entries(startDateGroups)) {
-      const count = tasks.length;
-      const milestone = Math.floor(count / 5) * 5; // Get the current milestone (5, 10, 15, etc.)
-      const milestoneKey = `gentleReminderShown_${startDateKey}_${milestone}`;
+  const milestone = Math.floor(count / 5) * 5; // 5,10,15...
+  const milestoneKey = `tasksCreatedToday_${todayKey}_${milestone}`;
 
-      // If we haven't shown the reminder for this milestone yet
-      if (milestone >= 5 && !localStorage.getItem(milestoneKey)) {
-        this.reminderMessage.set("You've added quite a few tasks today. Productivity matters, but so does your well-being. You may continue if you feel ready");
-        this.showReminder.set(true);
-        // Mark that reminder was shown for this milestone
-        localStorage.setItem(milestoneKey, 'true');
-        break; // Show only one reminder at a time
-      }
-    }
+  if (milestone >= 5 && !localStorage.getItem(milestoneKey)) {
+    this.reminderMessage.set(
+      `That's quite a lot of tasks you made today (${count}). Remember to prioritize and take breaks. Productivity matters, but so does your well-being.`
+    );
+
+    this.showReminder.set(true);
+
+    localStorage.setItem(milestoneKey, 'true');
   }
+}
 
 
 
