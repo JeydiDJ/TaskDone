@@ -104,10 +104,11 @@
             <ul class="divide-y divide-gray-200">
               @for (task of pendingPaginatedTasks(); track task._id) {
                 <li class="mb-2">
-  <a 
-    [routerLink]="['/tasks', task._id]" 
-    class="block w-full p-4 rounded-lg hover:bg-gray-50 hover:shadow-md transition-all"
-  >
+                    <a 
+                        [routerLink]="['/tasks', task._id]" 
+                        class="block w-full p-4 rounded-lg hover:bg-gray-50 hover:shadow-md transition-all"
+                        [ngClass]="{'animate-pulse-red': isTaskNearDeadline(task)}"
+                    >
                     <div class="flex justify-between items-start">
                       <div class="flex-1">
                         <h4 class="text-lg font-semibold text-gray-900 mb-1">{{ task.title }}</h4>
