@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable, BehaviorSubject, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Router } from '@angular/router';
 import { User, Users } from '../core/models/user.model';
@@ -15,22 +15,25 @@ export class AuthService {
   http = inject(HttpClient);
   router = inject(Router);
 
+  // --------------------
+  // Reactive current user
+  // --------------------
+  private currentUserSubject = new BehaviorSubject<User | null>(this.getStoredUser());
+  currentUser$ = this.currentUserSubject.asObservable();
+
   constructor() {}
 
   redirectToTasks() {
     this.router.navigate(['/tasks']);
   }
 
-  /**
-   * REGISTER: no token handling, just returns backend response
-   */
+  // --------------------
+  // AUTH API METHODS
+  // --------------------
   register(user: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/register`, user);
   }
 
-  /**
-   * LOGIN: handles token normally
-   */
   login(user: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, user).pipe(
       tap((response: any) => {
@@ -43,6 +46,14 @@ export class AuthService {
     return this.http.get<Users>(`${this.apiUrl}/users`);
   }
 
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/forgot-password`, { email });
+  }
+
+  resetPassword(token: string, password: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/reset-password/${token}`, { password });
+  }
+
   isAuthenticated(): boolean {
     return !!sessionStorage.getItem('token');
   }
@@ -51,36 +62,45 @@ export class AuthService {
     return sessionStorage.getItem('token');
   }
 
+  // --------------------
+  // LOGOUT & AUTOLOGOUT
+  // --------------------
   logout() {
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('tokenExpirationDate');
     sessionStorage.removeItem('user');
+    this.currentUserSubject.next(null);
+
     if (this.tokenExpirationTimer) {
       clearTimeout(this.tokenExpirationTimer);
     }
-    // Optional: redirect to login
-    // this.router.navigate(['/login']);
   }
 
-  forgotPassword(email: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/forgot-password`, { email });
+  autoLogout(expirationDuration: number) {
+    this.tokenExpirationTimer = setTimeout(() => {
+      this.logout();
+    }, expirationDuration);
   }
 
-  resetPassword(token: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/reset-password/${token}`, {
-      password,
-    });
-  }
-
-  /**
-   * PRIVATE: handle token storage after login only
-   */
+  // --------------------
+  // TOKEN HANDLING
+  // --------------------
   private handleAuthentication(token: string, expiresIn: number) {
-    const user = { token, expiresIn };
+    const payload = JSON.parse(atob(token.split('.')[1]));
+
+    const user: User = {
+      _id: payload._id,
+      token,
+      expiresIn,
+    };
+
     const expirationDate = new Date(new Date().getTime() + expiresIn * 1000);
+
     sessionStorage.setItem('token', token);
     sessionStorage.setItem('user', JSON.stringify(user));
     sessionStorage.setItem('tokenExpirationDate', expirationDate.toISOString());
+
+    this.currentUserSubject.next(user);
     this.autoLogout(expiresIn * 1000);
   }
 
@@ -96,34 +116,48 @@ export class AuthService {
 
     const expiresIn = expirationDate.getTime() - new Date().getTime();
     this.autoLogout(expiresIn);
+
+    const userData = sessionStorage.getItem('user');
+    if (userData) {
+      const user: User = JSON.parse(userData);
+      this.currentUserSubject.next(user);
+    }
   }
 
-  autoLogout(expirationDuration: number) {
-    this.tokenExpirationTimer = setTimeout(() => {
-      this.logout();
-    }, expirationDuration);
-  }
-
+  // --------------------
+  // CURRENT USER HELPERS
+  // --------------------
   getCurrentUserId(): string | null {
     try {
       const token = this.getToken();
       if (!token) return null;
 
-      // JWT tokens are in format: header.payload.signature
-      const payload = token.split('.')[1];
-      const decoded = JSON.parse(atob(payload));
-      return decoded._id;
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload._id;
     } catch (e) {
       return null;
     }
   }
 
-  getCurrentUser(): any {
-    const userData = sessionStorage.getItem('user');
-    return userData ? JSON.parse(userData) : null;
+  getCurrentUser(): User | null {
+    return this.currentUserSubject.value;
   }
 
-  saveUserData(user: any): void {
+  saveUserData(user: User): void {
     sessionStorage.setItem('user', JSON.stringify(user));
+    this.currentUserSubject.next(user);
+  }
+
+  private getStoredUser(): User | null {
+    const userData = sessionStorage.getItem('user');
+    if (!userData) return null;
+
+    try {
+      const parsed: Partial<User> = JSON.parse(userData);
+      return parsed as User;
+    } catch (err) {
+      console.error('Failed to parse stored user:', err);
+      return null;
+    }
   }
 }

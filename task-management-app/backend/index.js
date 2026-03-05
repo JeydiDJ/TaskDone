@@ -42,6 +42,10 @@ const app = express();
     app.use('/api/tasks', require('./routes/task.routes'));
     app.use('/api/users', require('./routes/user.routes'));
 
+    // Add badge routes here
+    const badgeRoutes = require('./routes/badge.routes');
+    app.use('/api/badges', badgeRoutes);
+
     app.get('', (req, res) => {
         res.send('API is running... <br><a href="/api-docs">View API Documentation</a>');
     });

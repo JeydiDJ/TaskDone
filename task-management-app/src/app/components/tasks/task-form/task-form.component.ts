@@ -96,14 +96,8 @@ export class TaskFormComponent {
         const today = new Date();
         const timeDiff = deadlineDate.getTime() - today.getTime();
         const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-
-        const reminderMessage =
-          daysDiff === 1
-            ? "Hey! Since you set the deadline in just 1 day, you'll get a reminder later to complete it. Do well and get that Task Done"
-            : "Hey! Since you set the deadline for more than a day, you'll be reminded for the deadline to accomplish it. Do well and get that Task Done";
-
+        
         this.router.navigate(['/tasks'], {
-          queryParams: { reminder: reminderMessage },
         });
       },
       error: (error) => {

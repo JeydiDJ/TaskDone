@@ -4,7 +4,15 @@ import { Task } from '../../../core/models/tasks.model';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { NgClass, DatePipe, NgIf, NgFor, CommonModule } from '@angular/common';
 import { AuthService } from '../../../services/auth.service';
+import { BadgeService } from '../../../services/badge.service';
 import { effect } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+import { filter } from 'rxjs/operators';
+import { User } from '../../../core/models/user.model';
+
+function isUser(u: User | null): u is User {
+  return !!u && !!u._id;
+}
 
 @Component({
     selector: 'app-task-list',
@@ -12,7 +20,9 @@ import { effect } from '@angular/core';
     templateUrl: './task-list.component.html',
 })
 export class TaskListComponent implements OnInit {
-  // Change the name to be consistent (remove $ suffix)
+  
+  userSignal = signal<User | null>(null);
+
   allTasks = signal<Task[]>([]);
   completedTasks = signal<Task[]>([]);
   pendingTasks = signal<Task[]>([]);
@@ -53,9 +63,6 @@ export class TaskListComponent implements OnInit {
   showReminder = signal<boolean>(false);
   reminderMessage = signal<string>('');
 
-  showCongratulation = signal<boolean>(false);
-  congratulationMessage = signal<string>('');
-
   showOverdueAlert = signal<boolean>(false);
   overdueTasks = signal<Task[]>([]);
   hasCheckedOverdue = false;
@@ -64,15 +71,43 @@ export class TaskListComponent implements OnInit {
   progressMap: Record<string, number> = {};
   colorMap: Record<string, string> = {};
 
+  badgeService = inject(BadgeService);
+  currentBadge = signal<any>(null);
+  showBadgeModal = signal<boolean>(false);
+  earnedBadge: any = null;
+
   constructor() {
      effect(() => {
     if (this.showOverdueAlert()) {
       this.playAlertSound();
     }
   });
+  effect(() => {
+  const user = this.userSignal();
+  const tasks = this.allTasks();
+
+  if (!user) {
+    console.log('[Badge] Waiting for user...');
+    return;
+  }
+
+  if (!tasks || tasks.length === 0) {
+    console.log('[Badge] Waiting for tasks to load...');
+    return;
+  }
+
+  console.log('[Badge] Both user and tasks are ready, checking milestone...');
+  this.checkBadgeMilestone(user);
+});
   }
 
   ngOnInit() {
+    this.auth.currentUser$
+  .pipe(filter(isUser))
+  .subscribe(user => {
+    console.log('[Badge] User loaded:', user);
+    this.userSignal.set(user);
+  });
     this.loadPendingTasks(this.pendingCurrentPage(), this.pendingItemsPerPage());
     this.loadCompletedTasks(this.completedCurrentPage(), this.completedItemsPerPage());
     this.loadUnfinishedTasks(this.unfinishedCurrentPage(), this.unfinishedItemsPerPage());
@@ -238,19 +273,23 @@ export class TaskListComponent implements OnInit {
   }
 
   loadAllTasks() {
-    this.taskService.getUserTasks(1, 1000).subscribe({
-      next: (response) => {
-        if (response.status === 'success' && response.data) {
-          this.allTasks.set(response.data.tasks || []);
-          this.checkGentleReminder();
-          this.checkCongratulation();
+  this.taskService.getUserTasks(1, 1000).subscribe({
+    next: (response) => {
+      if (response.status === 'success' && response.data) {
+        this.allTasks.set(response.data.tasks || []);
+        this.checkGentleReminder();
+
+        const user = this.userSignal();
+        if (user) {
+          this.checkBadgeMilestone(user); // ✅ safe, user is loaded
         }
-      },
-      error: (error) => {
-        console.error('Error getting all tasks:', error);
-      },
-    });
-  }
+      }
+    },
+    error: (error) => {
+      console.error('Error getting all tasks:', error);
+    },
+  });
+}
 
   // Returns progress percentage (100% = just created, 0% = deadline reached)
 getTaskProgress(task: any): number {
@@ -421,6 +460,7 @@ isTaskNearDeadline(task: Task) {
     this.loadCompletedTasks(this.completedCurrentPage(), this.completedItemsPerPage());
     this.loadPendingTasks(this.pendingCurrentPage(), this.pendingItemsPerPage());
     this.loadUnfinishedTasks(this.unfinishedCurrentPage(), this.unfinishedItemsPerPage());
+     this.loadAllTasks(); // ADD THIS
   }
 
 
@@ -505,35 +545,96 @@ isTaskNearDeadline(task: Task) {
 
 
 
-  dismissReminder() {
-    this.showReminder.set(false);
-  }
-
-  checkCongratulation() {
-    const now = new Date();
-    const today = now.toDateString();
-
-    // Filter completed tasks for today
-    const todayCompletedTasks = this.allTasks().filter(task => {
-      if (!task.completed || !task.updatedAt) return false;
-      const completedDate = new Date(task.updatedAt).toDateString();
-      return completedDate === today;
-    });
-
-    const count = todayCompletedTasks.length;
-    const milestone = Math.floor(count / 5) * 5; // Get the current milestone (5, 10, 15, etc.)
-    const milestoneKey = `congratulationShown_${today}_${milestone}`;
-
-    // If we haven't shown the congratulation for this milestone yet and count is multiple of 5
-    if (milestone >= 5 && count % 5 === 0 && !localStorage.getItem(milestoneKey)) {
-      this.congratulationMessage.set("That's a lot of Task Done, proud of the effort you made today. This is growth, celebrate it.");
-      this.showCongratulation.set(true);
-      // Mark that congratulation was shown for this milestone
-      localStorage.setItem(milestoneKey, 'true');
+    dismissReminder() {
+      this.showReminder.set(false);
     }
+
+    async checkBadgeMilestone(user: User) {
+  console.log('[Badge] checkBadgeMilestone called');
+
+  if (!user?._id) {
+    console.log('[Badge] Invalid user, exiting.');
+    return;
   }
 
-  dismissCongratulation() {
-    this.showCongratulation.set(false);
+  const userId = user._id;
+  console.log('[Badge] User ID found:', userId);
+
+  // Count completed tasks
+  const completedTasks = this.allTasks().filter(t => t.completed);
+  const count = completedTasks.length;
+  console.log('[Badge] Completed tasks count:', count);
+
+  const milestone = Math.floor(count / 5) * 5;
+  console.log('[Badge] Calculated milestone:', milestone);
+
+  if (milestone < 5) {
+    console.log('[Badge] Milestone < 5, nothing to award');
+    return;
   }
+
+  try {
+    // Fetch existing badges
+    console.log('[Badge] Fetching existing badges for user');
+    const existingBadges: any[] = await firstValueFrom(
+      this.badgeService.getUserBadges(userId)
+    );
+    console.log('[Badge] Existing badges:', existingBadges);
+
+    // Determine highest milestone already earned
+    const highestMilestone = existingBadges.length
+      ? Math.max(...existingBadges.map(b => b.milestone))
+      : 0;
+
+    if (milestone <= highestMilestone) {
+      console.log('[Badge] User already earned this milestone or higher, skipping');
+      return;
+    }
+
+    // Create new badge
+    const badge = {
+      userId,
+      milestone,
+      name: `${milestone} Tasks Completed`,
+      icon: this.getBadgeIcon(milestone),
+      type: 'lifetime' as 'lifetime'
+    };
+
+    console.log('[Badge] Awarding new badge:', badge);
+
+    // Send to backend
+    const awardedResponse: any = await firstValueFrom(
+      this.badgeService.createBadge(badge)
+    );
+    console.log('[Badge] Backend response:', awardedResponse);
+
+    if (awardedResponse?.status === 'success' && awardedResponse.data) {
+      // Show modal for the newly awarded badge
+      this.currentBadge.set(awardedResponse.data);
+      this.showBadgeModal.set(true);
+      this.badgeService.emitBadgeChange();
+      console.log('[Badge] Badge awarded and modal shown');
+    } else {
+      console.warn('[Badge] Unexpected backend response:', awardedResponse);
+    }
+
+  } catch (err) {
+    console.error('[Badge] Error awarding badge:', err);
+  }
+}
+
+getBadgeIcon(milestone: number) {
+  if (milestone >= 100) return '👑';    // Crown – ultimate achiever
+  if (milestone >= 90) return '💎';     // Diamond – near perfection
+  if (milestone >= 75) return '🏆';     // Trophy – mastery level
+  if (milestone >= 60) return '🥇';     // Gold medal – expert
+  if (milestone >= 50) return '🎖️';     // Ribbon – high achiever
+  if (milestone >= 40) return '🥈';     // Silver medal – advanced
+  if (milestone >= 30) return '🥉';     // Bronze medal – progressing
+  if (milestone >= 20) return '🏅';     // Medal – beginner achiever
+  if (milestone >= 10) return '⭐';     // Star – first milestone
+  if (milestone >= 5) return '✨';      // Sparkle – starter milestone
+  return '🔹';                           // Small diamond – very first tasks
+}
+
 }

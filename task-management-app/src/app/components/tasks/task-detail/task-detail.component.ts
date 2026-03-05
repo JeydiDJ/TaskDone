@@ -261,17 +261,24 @@ submitMood() {
       this.mood.set(null);
       this.moodNote.set('');
 
-      // Close modal after successful save
+      // Close modal
       this.closeCongratsModal();
+
+      // Redirect to /tasks
+      this.router.navigate(['/tasks']);
     },
     error: (err) => {
       console.error('Error saving mood:', err);
       alert('Failed to save mood. Try again.');
 
-      // Optional: still close modal if you want
+      // Close modal anyway
       this.closeCongratsModal();
+
+      // Optional: redirect even on error
+      // this.router.navigate(['/tasks']);
     }
   });
+
 }
   closeCongratsModal() {
     this.autoClosing.set(true);

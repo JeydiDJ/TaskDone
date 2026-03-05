@@ -325,7 +325,7 @@ createBarChart() {
           beginAtZero: true,
           title: {
             display: true,
-            text: 'Tasks Completed',
+            text: 'Number of Tasks Completed',
             color: '#374151',
             font: { size: 14, weight: 'bold' },
           },
