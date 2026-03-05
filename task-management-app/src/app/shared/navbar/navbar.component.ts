@@ -1,14 +1,15 @@
-import { Component, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Component, inject, signal, OnInit } from '@angular/core';
+import { Router, RouterLink, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NgClass } from '@angular/common';
+import { filter } from 'rxjs/operators';
 
 @Component({
-    selector: 'app-navbar',
-    imports: [RouterLink, NgClass],
-    templateUrl: './navbar.component.html',
+  selector: 'app-navbar',
+  imports: [RouterLink, NgClass],
+  templateUrl: './navbar.component.html',
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit {
   authService = inject(AuthService);
   router = inject(Router);
 
@@ -17,11 +18,18 @@ export class NavbarComponent {
 
   constructor() {}
 
+  ngOnInit(): void {
+    // Close mobile menu automatically on route change
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => {
+        this.showMobileMenu.set(false);
+      });
+  }
+
   isLoggedIn(): boolean {
     return this.authService.isAuthenticated();
   }
-
-
 
   logout() {
     this.authService.logout();
