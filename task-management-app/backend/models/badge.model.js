@@ -1,10 +1,9 @@
-// badge.model.js
 const mongoose = require('mongoose');
 
 const badgeSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // reference to your user collection
+    ref: 'User',
     required: true
   },
   milestone: {
@@ -21,7 +20,7 @@ const badgeSchema = new mongoose.Schema({
     required: true
   },
   icon: {
-    type: String, // could be emoji or URL to an image
+    type: String,
     required: true
   },
   dateEarned: {
@@ -29,6 +28,9 @@ const badgeSchema = new mongoose.Schema({
     default: Date.now
   }
 });
+
+// Add a unique compound index to prevent duplicates
+badgeSchema.index({ userId: 1, milestone: 1 }, { unique: true });
 
 const Badge = mongoose.model('Badge', badgeSchema);
 

@@ -22,6 +22,7 @@ function isUser(u: User | null): u is User {
 })
 export class TaskListComponent implements OnInit {
   
+  private badgeAwardingInProgress: boolean = false;
   userSignal = signal<User | null>(null);
 
   allTasks = signal<Task[]>([]);
@@ -569,7 +570,7 @@ getSortedPendingTasks() {
       this.showReminder.set(false);
     }
 
-    async checkBadgeMilestone(user: User) {
+  async checkBadgeMilestone(user: User) {
   console.log('[Badge] checkBadgeMilestone called');
 
   if (!user?._id) {
@@ -578,40 +579,32 @@ getSortedPendingTasks() {
   }
 
   const userId = user._id;
-  console.log('[Badge] User ID found:', userId);
 
   // Count completed tasks
   const completedTasks = this.allTasks().filter(t => t.completed);
   const count = completedTasks.length;
-  console.log('[Badge] Completed tasks count:', count);
-
   const milestone = Math.floor(count / 5) * 5;
-  console.log('[Badge] Calculated milestone:', milestone);
 
-  if (milestone < 5) {
-    console.log('[Badge] Milestone < 5, nothing to award');
-    return;
-  }
+  if (milestone < 5) return;
 
   try {
     // Fetch existing badges
-    console.log('[Badge] Fetching existing badges for user');
     const existingBadges: any[] = await firstValueFrom(
       this.badgeService.getUserBadges(userId)
     );
-    console.log('[Badge] Existing badges:', existingBadges);
 
-    // Determine highest milestone already earned
-    const highestMilestone = existingBadges.length
-      ? Math.max(...existingBadges.map(b => b.milestone))
-      : 0;
-
-    if (milestone <= highestMilestone) {
-      console.log('[Badge] User already earned this milestone or higher, skipping');
+    // Check if this milestone is already awarded
+    const hasMilestone = existingBadges.some(b => b.milestone === milestone);
+    if (hasMilestone) {
+      console.log('[Badge] User already has this exact milestone, skipping');
       return;
     }
 
-    // Create new badge
+    // Optional: debounce / lock to prevent multiple simultaneous calls
+    if (this.badgeAwardingInProgress) return;
+    this.badgeAwardingInProgress = true;
+
+    // Create new badge object
     const badge = {
       userId,
       milestone,
@@ -620,28 +613,31 @@ getSortedPendingTasks() {
       type: 'lifetime' as 'lifetime'
     };
 
-    console.log('[Badge] Awarding new badge:', badge);
-
-    // Send to backend
+    // Call backend
     const awardedResponse: any = await firstValueFrom(
       this.badgeService.createBadge(badge)
     );
-    console.log('[Badge] Backend response:', awardedResponse);
 
     if (awardedResponse?.status === 'success' && awardedResponse.data) {
-      // Show modal for the newly awarded badge
       this.currentBadge.set(awardedResponse.data);
       this.showBadgeModal.set(true);
       this.badgeService.emitBadgeChange();
       console.log('[Badge] Badge awarded and modal shown');
-    } else {
-      console.warn('[Badge] Unexpected backend response:', awardedResponse);
     }
 
-  } catch (err) {
-    console.error('[Badge] Error awarding badge:', err);
+    this.badgeAwardingInProgress = false;
+
+  } catch (err: any) {
+    // If backend returns duplicate key error, just ignore
+    if (err?.error?.message === 'Badge already awarded') {
+      console.log('[Badge] Duplicate prevented by backend');
+    } else {
+      console.error('[Badge] Error awarding badge:', err);
+    }
+    this.badgeAwardingInProgress = false;
   }
 }
+
 
 getBadgeIcon(milestone: number) {
   if (milestone >= 100) return '👑';    // Crown – ultimate achiever

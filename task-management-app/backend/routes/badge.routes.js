@@ -8,22 +8,18 @@ router.post('/', async (req, res) => {
   try {
     const { userId, milestone, name, icon, type } = req.body;
 
-    // Check if the user already has this milestone
-    const existing = await Badge.findOne({ userId, milestone });
-    if (existing) {
-      return res.status(400).json({ message: 'Badge already awarded' });
-    }
-
     const badge = await Badge.create({ userId, milestone, name, icon, type });
 
-    // Wrap in an object like your other APIs
     res.status(201).json({
       status: 'success',
       data: badge
     });
   } catch (err) {
+    if (err.code === 11000) { // Mongo duplicate key error
+      return res.status(400).json({ status: 'error', message: 'Badge already awarded' });
+    }
     console.error(err);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ status: 'error', message: 'Server error' });
   }
 });
 
