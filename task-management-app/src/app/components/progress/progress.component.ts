@@ -214,28 +214,29 @@ loadProgressStats(): void {
       // =========================
       // CHARTS
       // =========================
-      if (this.totalTasks > 0) {
-        if (!this.pieChart) this.createPieChart();
-        else this.updatePieChart();
+      // CHARTS
+if (this.totalTasks > 0) {
+  if (!this.pieChart) this.createPieChart();
+  else this.updatePieChart();
 
-        const months: string[] = [];
-        const monthlyCounts: number[] = [];
+  // Fixed 6-month window
+  const months = this.getSixMonthLabels(); // March → August if today is March
+  const monthlyCounts: number[] = Array(6).fill(0);
+  const currentMonth = new Date().getMonth();
 
-        for (let i = 5; i >= 0; i--) {
-          const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          months.push(date.toLocaleString('default', { month: 'short' }));
-
-          const count = tasks.filter(t => t.completedAt &&
-            t.completedAt.getMonth() === date.getMonth() &&
-            t.completedAt.getFullYear() === date.getFullYear()
-          ).length;
-
-          monthlyCounts.push(count);
-        }
-
-        if (!this.barChart) this.createBarChart();
-        this.updateBarChart(months, monthlyCounts);
+  tasks.forEach(t => {
+    if (t.completedAt) {
+      const taskMonth = t.completedAt.getMonth();
+      const diff = (taskMonth - currentMonth + 12) % 12;
+      if (diff >= 0 && diff < 6) {
+        monthlyCounts[diff] += 1;
       }
+    }
+  });
+
+  if (!this.barChart) this.createBarChart();
+  this.updateBarChart(months, monthlyCounts);
+}
 
       // Force Angular to update template
       this.cdr.detectChanges();
@@ -284,17 +285,35 @@ loadProgressStats(): void {
  // ======================
 // BAR CHART
 // ======================
+
+getSixMonthLabels(startMonth?: number) {
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  const today = new Date();
+  const start = startMonth ?? today.getMonth(); // 0 = Jan, 2 = Mar
+
+  const labels = [];
+  for (let i = 0; i < 6; i++) {
+    const monthIndex = (start + i) % 12;
+    labels.push(monthNames[monthIndex]);
+  }
+  return labels;
+}
 createBarChart() {
   if (!this.monthlyCanvas) return;
+
+  const labels = this.getSixMonthLabels(); // always start from current month
 
   this.barChart = new Chart(this.monthlyCanvas.nativeElement, {
     type: 'bar',
     data: {
-      labels: [], // month labels will be filled later
+      labels: labels,
       datasets: [
         {
-          label: 'Tasks Completed', // This will appear in the legend
-          data: [],
+          label: 'Tasks Completed',
+          data: Array(6).fill(0), // start with empty data
           backgroundColor: '#3b82f6',
           borderRadius: 6,
         },
@@ -305,39 +324,12 @@ createBarChart() {
       maintainAspectRatio: false,
       animation: { duration: 1000 },
       plugins: {
-        legend: {
-          display: true,           // show the legend
-          position: 'top',         // position above the chart
-          labels: {
-            font: {
-              size: 14,           // increase font size for readability
-              weight: 'bold',
-            },
-            color: '#374151',     // dark gray color for text
-          },
-        },
-        tooltip: {
-          enabled: true,          // show tooltip on hover
-        },
+        legend: { display: true, position: 'top', labels: { font: { size: 14, weight: 'bold' }, color: '#374151' } },
+        tooltip: { enabled: true },
       },
       scales: {
-        y: { 
-          beginAtZero: true,
-          title: {
-            display: true,
-            text: 'Number of Tasks Completed',
-            color: '#374151',
-            font: { size: 14, weight: 'bold' },
-          },
-        },
-        x: {
-          title: {
-            display: true,
-            text: 'Month',
-            color: '#374151',
-            font: { size: 14, weight: 'bold' },
-          },
-        },
+        y: { beginAtZero: true, title: { display: true, text: 'Number of Tasks Completed', color: '#374151', font: { size: 14, weight: 'bold' } } },
+        x: { title: { display: true, text: 'Month', color: '#374151', font: { size: 14, weight: 'bold' } } },
       },
     },
   });
