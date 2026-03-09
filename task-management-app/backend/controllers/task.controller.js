@@ -158,6 +158,24 @@ exports.getUnfinishedTasks = async (req, res) => {
   }
 };
 
+exports.getIncompleteTasks = async (req, res) => {
+  console.log('req.user =', req.user); // 🔍 check this
+  try {
+    const tasks = await Task.find({
+      user: req.user._id,
+      completed: false
+    }).sort({ deadline: 1 });
+
+    successResponse(res, 200, "Incomplete tasks retrieved successfully", {
+      tasks,
+      totalTasks: tasks.length
+    });
+  } catch (error) {
+    console.error('Error fetching incomplete tasks:', error);
+    errorResponse(res, 500, error.message);
+  }
+};
+
 // Get all tasks for a user
 exports.getAllTasksForUser = async (req, res) => {
   try {

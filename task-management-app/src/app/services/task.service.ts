@@ -32,6 +32,10 @@ export class TaskService {
     return this.http.get<Tasks>(`${this.apiUrl}/unfinished?page=${page}&limit=${limit}`);
   }
 
+  getIncompleteTasks(): Observable<Tasks> {
+      return this.http.get<Tasks>(`${this.apiUrl}/incomplete`);
+    }
+
   getUserTasks(page: number, limit: number): Observable<Tasks> {
     return this.http.get<Tasks>(`${this.apiUrl}/user?page=${page}&limit=${limit}`);
   }

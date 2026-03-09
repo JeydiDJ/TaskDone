@@ -24,7 +24,7 @@ export class TaskDetailComponent implements OnInit {
   allTasks = signal<any[]>([]);
   unfinishedTasks = computed(() =>
   this.allTasks().filter(t => !t.completed && t._id !== this.task()?._id)
-  );
+);
 
   getTaskStatus() {
     const currentTask = this.task();
@@ -95,75 +95,78 @@ export class TaskDetailComponent implements OnInit {
 
   // Load current task
   this.loadTaskDetails(id);
-
-  // Load all tasks for pending check
-  this.taskService.getAllTasks().subscribe({
-  next: (response) => {
-    // Ensure it's an array
-    if (Array.isArray(response.data)) {
-      this.allTasks.set(response.data);
-    } else if (response.data && Array.isArray(response.data.tasks)) {
-      // fallback if the API nests the array in `tasks`
-      this.allTasks.set(response.data.tasks);
-    } else {
-      console.warn('Unexpected API response for allTasks:', response.data);
-      this.allTasks.set([]);
-    }
-  },
-  error: (err) => {
-    console.error('Error loading all tasks:', err);
+  this.loadIncompleteTasks();
   }
-});
-}
 
-  loadTaskDetails(id: string) {
+ 
+ loadIncompleteTasks() {
+    this.taskService.getIncompleteTasks().subscribe({
+      next: (res: any) => {
+        if (res.data && Array.isArray(res.data.tasks)) {
+          this.allTasks.set(res.data.tasks);
+        } else if (res.data && Array.isArray(res.data)) {
+          // fallback if tasks are directly in res.data
+          this.allTasks.set(res.data);
+        } else {
+          this.allTasks.set([]);
+        }
+        console.log('UNFINISHED TASKS SET:', this.allTasks());
+      },
+      error: (err) => {
+        console.error('Error loading incomplete tasks:', err);
+        this.allTasks.set([]);
+      }
+    });
+  }
+   loadTaskDetails(id: string) {
     this.taskService.getTaskById(id).subscribe({
-      next: (response) => {
+      next: response => {
         this.task.set(response.data);
         this.isCompleted.set(this.task()?.completed || false);
         this.loading.set(false);
       },
-      error: (error) => {
+      error: error => {
         console.error('Error getting task:', error);
         this.error.set(error?.error?.message || 'Error getting task');
         this.loading.set(false);
-      },
+      }
     });
   }
 
-  goBack(): void {
+   goBack(): void {
     // Replace location.back() with direct navigation
     this.router.navigate(['/tasks']);
   }
 
+
+ 
   completeTask() {
-  if (!this.task() || this.task().completed) return;
+    if (!this.task() || this.task().completed) return;
 
-  this.loading.set(true);
-  const taskId = this.task()._id;
+    this.loading.set(true);
+    const taskId = this.task()._id;
 
-  // Only mark completed; do NOT send mood yet
-  const updatedTask = { completed: true };
+    this.taskService.updateTask(taskId, { completed: true }).subscribe({
+      next: (response) => {
+        const updated = response?.data;
+        if (updated) {
+          this.task.set(updated);
+          this.isCompleted.set(true);
 
-  this.taskService.updateTask(taskId, updatedTask).subscribe({
-    next: (response) => {
-      if (response?.data) {
-        this.task.set(response.data);
-        this.isCompleted.set(true);
+          this.allTasks.update(tasks =>
+            tasks.map(t => t._id === updated._id ? updated : t)
+          );
+        }
+        this.loading.set(false);
+        this.showCongratsModal.set(true);
+      },
+      error: (error) => {
+        console.error('Error completing task:', error);
+        this.error.set(error?.error?.message || 'Error marking task as complete');
+        this.loading.set(false);
       }
-
-      this.loading.set(false);
-
-      // Show the modal for mood selection
-      this.showCongratsModal.set(true);
-    },
-    error: (error) => {
-      console.error('Error completing task:', error);
-      this.error.set(error?.error?.message || 'Error marking task as complete');
-      this.loading.set(false);
-    }
-  });
-}
+    });
+  }
 
 submitMood() {
   if (!this.task()?._id) return;

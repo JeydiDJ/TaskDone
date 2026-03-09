@@ -190,6 +190,9 @@ router.get("/completed", auth, taskController.getCompletedTasks);
  */
 router.get("/unfinished", auth, taskController.getUnfinishedTasks);
 
+// New endpoint for all incomplete tasks
+router.get('/incomplete', auth, taskController.getIncompleteTasks);
+
 /**
  * @swagger
  * /api/tasks/progress:

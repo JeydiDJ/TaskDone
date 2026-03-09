@@ -8,11 +8,11 @@ import {
 } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
-import { NgClass } from '@angular/common';
+import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-task-form',
-  imports: [ReactiveFormsModule, NgClass, RouterLink],
+  imports: [ReactiveFormsModule, NgIf, RouterLink],
   templateUrl: './task-form.component.html',
 })
 export class TaskFormComponent {

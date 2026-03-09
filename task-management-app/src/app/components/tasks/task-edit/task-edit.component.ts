@@ -4,12 +4,12 @@ import { AuthService } from '../../../services/auth.service';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { User } from '../../../core/models/user.model';
-import { NgClass, NgIf, NgFor } from '@angular/common';
+import { NgClass, NgIf} from '@angular/common';
 import { UsersService } from '../../../services/users.service';
 
 @Component({
   selector: 'app-task-edit',
-  imports: [ReactiveFormsModule, RouterLink, NgClass, NgIf, NgFor],
+  imports: [ReactiveFormsModule, RouterLink, NgClass, NgIf],
   templateUrl: './task-edit.component.html',
 })
 export class TaskEditComponent implements OnInit {
